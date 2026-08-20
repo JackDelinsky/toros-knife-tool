@@ -1,0 +1,52 @@
+Toros Knife & Tool — image folder guide
+======================================
+
+Drop files into public/images/ (paths below are URL paths in the browser).
+
+BRAND (homepage sections)
+  brand/hero.jpg              — main hero background
+  brand/logo.png              — official Toros circular logo (header, footer, favicon)
+  brand/hero-secondary.jpg    — optional hero overlay
+  brand/heritage.jpg          — Turkish heritage section
+  brand/maker.jpg             — Meet the maker photo (or use about/international-connection.jpg)
+  brand/collector.jpg         — Collector club section
+  brand/email.jpg             — Email signup background
+  brand/mystery.jpg           — Mystery knife bag section
+  brand/event.jpg             — Events / shows (future)
+
+ABOUT US (founder story — public/images/brand/about/)
+  about/banner.jpg                    — Murat & Aydin with Toros banner
+  about/bushcraft.jpg                 — Georgia Bushcraft event photo
+  about/international-connection.jpg  — Murat & Aydin with Turkish knives
+  about/jellybean-display.jpg         — Jellybean knife display stand
+  HQ sources in assets/brand/about/ (banner-hq.png, composite-hq.png)
+  Re-export: python3 scripts/export-about-images.py
+
+CATEGORIES (shop category cards)
+  categories/fixed-blades.jpg
+  categories/neck-knives.jpg
+  categories/folding-knives.jpg
+  categories/custom-knives.jpg
+  categories/axes-hatchets.jpg
+
+PRODUCTS (one folder per knife — use product slug as folder name)
+  products/anatolian-hunter/main.jpg       — primary product photo
+  products/anatolian-hunter/gallery-1.jpg  — optional extra angles
+  products/anatolian-hunter/gallery-2.jpg
+  products/toros-field-cleaver/main.jpg
+  products/nomad-neck-knife/main.jpg
+  ... (same pattern for every product slug)
+
+USE CASES (Built for the Field cards)
+  use-cases/hunting.jpg
+  use-cases/camping.jpg
+  use-cases/edc.jpg
+  use-cases/collecting.jpg
+  use-cases/gifting.jpg
+
+EVENTS (future show / QR landing pages)
+  events/show-floor.jpg
+  events/giveaway.jpg
+
+Formats: JPG or WebP recommended. Use descriptive filenames above.
+After adding files, tell the agent to wire them in — or paths are listed in lib/image-paths.ts
