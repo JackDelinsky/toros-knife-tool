@@ -33,6 +33,12 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# scratch/staging output from image-processing scripts
+/scripts/_staging_crops/
+/scripts/_staging_meta.json
+/scripts/_preview_crop.jpg
+/scripts/_contact_sheet.jpg
+
 # vercel
 .vercel
 

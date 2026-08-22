@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { HERO_KNIFE_LAYERS } from "@/lib/hero-knife";
 import { formatPrice, getProductBySlug } from "@/lib/products";
+import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion";
 
 /**
  * Layered hero knives — each knife links to its product page on hover.
@@ -11,13 +12,11 @@ import { formatPrice, getProductBySlug } from "@/lib/products";
 export function HeroFeaturedKnife() {
   const visualRef = useRef<HTMLDivElement>(null);
   const [parallax, setParallax] = useState({ x: 0, y: 0 });
-  const [motionEnabled, setMotionEnabled] = useState(false);
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const motionEnabled = !prefersReducedMotion;
 
   useEffect(() => {
-    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    setMotionEnabled(!reducedMotion);
-
-    if (reducedMotion) return;
+    if (prefersReducedMotion) return;
 
     function handlePointerMove(event: PointerEvent) {
       const element = visualRef.current;
@@ -37,7 +36,7 @@ export function HeroFeaturedKnife() {
 
     window.addEventListener("pointermove", handlePointerMove, { passive: true });
     return () => window.removeEventListener("pointermove", handlePointerMove);
-  }, []);
+  }, [prefersReducedMotion]);
 
   const parallaxStyle = motionEnabled
     ? { transform: `translate3d(${parallax.x}px, ${parallax.y}px, 0)` }

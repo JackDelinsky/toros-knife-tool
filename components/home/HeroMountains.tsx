@@ -1,18 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion";
 
 /**
  * Layered mountain silhouettes — subtle depth behind hero knives and text.
  */
 export function HeroMountains() {
   const [parallax, setParallax] = useState({ x: 0, y: 0, scroll: 0 });
-  const [motionEnabled, setMotionEnabled] = useState(false);
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const motionEnabled = !prefersReducedMotion;
 
   useEffect(() => {
-    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    setMotionEnabled(!reducedMotion);
-    if (reducedMotion) return;
+    if (prefersReducedMotion) return;
 
     function handlePointerMove(event: PointerEvent) {
       const x = (event.clientX / window.innerWidth - 0.5) * 8;
@@ -32,7 +32,7 @@ export function HeroMountains() {
       window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("scroll", handleScroll);
     };
-  }, []);
+  }, [prefersReducedMotion]);
 
   const scrollShift = motionEnabled ? parallax.scroll * 0.03 : 0;
   const layerShift = (multiplier: number) =>
