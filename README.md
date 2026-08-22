@@ -4,6 +4,20 @@ Premium e-commerce storefront for **Toros Knife & Tool** — handcrafted Turkish
 
 > *"Toros Knife & Tool bridges centuries-old Turkish bladesmithing with the spirit of American outdoor adventure."*
 
+## Screenshots
+
+| Home | Shop |
+| --- | --- |
+| ![Homepage hero](docs/media/home-hero.png) | ![Shop page](docs/media/shop.png) |
+
+| Product detail |
+| --- |
+| ![Product detail page](docs/media/product-detail.png) |
+
+**Hero parallax + hover interaction:**
+
+![Hero parallax and hover animation](docs/media/hero-animation.gif)
+
 ## Phase 1 (Current)
 
 - Dark premium aesthetic with tan/gold accents
