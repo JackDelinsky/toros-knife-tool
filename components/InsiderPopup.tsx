@@ -1,25 +1,31 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { MosaicDivider } from "@/components/ui/GeometricAccents";
 import { TorosLogo } from "@/components/ui/TorosLogo";
 
 const SESSION_KEY = "toros-insider-dismissed";
 
+// Immersive, scroll-driven pages where a popup would interrupt the experience.
+const SUPPRESSED_PATHS = ["/craftsmanship"];
+
 export function InsiderPopup() {
+  const pathname = usePathname();
   const [visible, setVisible] = useState(false);
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const suppressed = SUPPRESSED_PATHS.some((path) => pathname?.startsWith(path));
 
   useEffect(() => {
-    if (sessionStorage.getItem(SESSION_KEY)) return;
+    if (suppressed || sessionStorage.getItem(SESSION_KEY)) return;
 
     const timer = setTimeout(() => {
       setVisible(true);
     }, 1500);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [suppressed]);
 
   function dismiss() {
     sessionStorage.setItem(SESSION_KEY, "1");

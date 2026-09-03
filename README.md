@@ -18,6 +18,12 @@ Premium e-commerce storefront for **Toros Knife & Tool** — handcrafted Turkish
 
 ![Hero parallax and hover animation](docs/media/hero-animation.gif)
 
+**Craftsmanship page — scroll-driven media expansion (Framer Motion):**
+
+![Craftsmanship scroll-expand start state](docs/media/craftsmanship-start.png)
+
+![Craftsmanship scroll-expand animation](docs/media/craftsmanship-scroll-expand.gif)
+
 ## Phase 1 (Current)
 
 - Dark premium aesthetic with tan/gold accents
@@ -27,6 +33,7 @@ Premium e-commerce storefront for **Toros Knife & Tool** — handcrafted Turkish
 - Product detail pages with specs, craftsmanship, care, shipping, and trust sections
 - Local product data (`data/products.ts`)
 - Placeholder product imagery (ready for real photos)
+- Craftsmanship page (`/craftsmanship`) with a scroll-driven media expansion hero (Framer Motion)
 
 **Not included in Phase 1:** Knife Finder quiz, 360 viewer, event landing pages, email backend, live checkout.
 
@@ -35,6 +42,7 @@ Premium e-commerce storefront for **Toros Knife & Tool** — handcrafted Turkish
 - [Next.js 16](https://nextjs.org/) (App Router)
 - React 19 + TypeScript
 - Tailwind CSS v4
+- [Framer Motion](https://www.framer.com/motion/) for scroll/hover-driven animation
 
 ## Getting Started
 
