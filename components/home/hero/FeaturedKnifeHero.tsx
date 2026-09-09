@@ -307,19 +307,29 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
 
           {/* Deterministic navigation targets over the outer thirds. The active
               cutout is a transparent PNG whose box is far wider than the knife,
-              so hit-testing must not depend on it. */}
-          <button
-            type="button"
-            className="hero-side-zone hero-side-zone--prev"
-            onClick={() => step(-1)}
-            aria-label={`Show ${knives[cycle(active - 1, length)].product.name}`}
-          />
-          <button
-            type="button"
-            className="hero-side-zone hero-side-zone--next"
-            onClick={() => step(1)}
-            aria-label={`Show ${knives[cycle(active + 1, length)].product.name}`}
-          />
+              so hit-testing must not depend on it.
+
+              They are dropped once the knife turns. The active slide sits in
+              its own stacking context, so a zone layered above it swallows the
+              drag before the turntable ever sees it — and a knife you can only
+              grab in its middle third feels broken. Navigation is then the
+              arrows and the keyboard, which are always available. */}
+          {!spin ? (
+            <>
+              <button
+                type="button"
+                className="hero-side-zone hero-side-zone--prev"
+                onClick={() => step(-1)}
+                aria-label={`Show ${knives[cycle(active - 1, length)].product.name}`}
+              />
+              <button
+                type="button"
+                className="hero-side-zone hero-side-zone--next"
+                onClick={() => step(1)}
+                aria-label={`Show ${knives[cycle(active + 1, length)].product.name}`}
+              />
+            </>
+          ) : null}
 
           <div className="hero-contact-shadow" aria-hidden="true" />
         </motion.div>

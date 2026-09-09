@@ -1956,11 +1956,19 @@ body::after {
 /* The active knife stays above the zones so its centre still opens inspection.
    `pointer-events` has to be re-enabled explicitly: the slide box above turns
    them off for the whole stage, and children inherit that. */
-.hero-slide[data-role="active"] .hero-slide-button {
+.hero-slide[data-role="active"] .hero-slide-button,
+.hero-slide[data-role="active"] .spin-wrap {
   position: relative;
   z-index: 5;
   pointer-events: auto;
 }
+
+/* Without this the turntable sits *under* the navigation zones, which cover the
+   outer third on each side — so a drag that began anywhere but the middle of
+   the stage went to "previous knife" instead of turning the knife, and the
+   rotation looked stuck. The knife itself now takes the drag; the stage either
+   side of it still navigates. */
+.hero-slide[data-role="active"] .spin-wrap .spin { pointer-events: auto; }
 
 .hero-contact-shadow {
   position: absolute;
