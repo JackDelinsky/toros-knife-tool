@@ -10,14 +10,6 @@ const nextConfig: NextConfig = {
     root: projectRoot,
   },
   outputFileTracingRoot: projectRoot,
-  images: {
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "images.unsplash.com",
-      },
-    ],
-  },
 };
 
 export default nextConfig;

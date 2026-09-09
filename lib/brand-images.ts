@@ -10,8 +10,6 @@ import {
 /** Homepage & section photography — local assets in public/images/ */
 export const BRAND_IMAGES = {
   hero: BRAND_IMAGE_PATHS.hero,
-  heroKnife: BRAND_IMAGE_PATHS.heroKnife,
-  heroSecondary: BRAND_IMAGE_PATHS.heroSecondary,
   logo: BRAND_IMAGE_PATHS.logo,
   heritage: BRAND_IMAGE_PATHS.heritage,
   maker: BRAND_IMAGE_PATHS.aboutInternational,

@@ -6,8 +6,6 @@ export const IMAGES_ROOT = "/images";
 /** Brand / homepage images (public/images/brand/) */
 export const BRAND_IMAGE_PATHS = {
   hero: `${IMAGES_ROOT}/brand/hero.png`,
-  heroKnife: `${IMAGES_ROOT}/brand/hero-knife-cutout.png`,
-  heroSecondary: `${IMAGES_ROOT}/categories/neck-knives.png`,
   logo: `${IMAGES_ROOT}/brand/logo.png`,
   heritage: `${IMAGES_ROOT}/brand/heritage.png`,
   maker: `${IMAGES_ROOT}/brand/maker.png`,
