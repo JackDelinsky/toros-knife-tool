@@ -8,45 +8,40 @@ interface AccordionItem {
   content: string;
 }
 
-interface ProductDetailsAccordionProps {
-  items: AccordionItem[];
-}
-
-export function ProductDetailsAccordion({ items }: ProductDetailsAccordionProps) {
-  const [openId, setOpenId] = useState<string | null>(null);
-
-  function toggle(id: string) {
-    setOpenId((current) => (current === id ? null : id));
-  }
+/**
+ * Shipping, returns and care.
+ *
+ * These are collapsed because they are reference material almost nobody reads
+ * on the way to a decision — not because collapsing things is a style. The
+ * specs and the story stay open.
+ */
+export function ProductDetailsAccordion({ items }: { items: AccordionItem[] }) {
+  const [openId, setOpenId] = useState<string | null>(items[0]?.id ?? null);
 
   return (
-    <section className="product-accordion" aria-label="Shipping, returns, and care">
+    <div className="accordion">
       {items.map((item) => {
         const isOpen = openId === item.id;
         return (
-          <div key={item.id} className="product-accordion-item">
+          <div key={item.id} className="accordion-item">
             <button
               type="button"
-              className="product-accordion-trigger"
-              onClick={() => toggle(item.id)}
+              className="accordion-trigger"
+              onClick={() => setOpenId(isOpen ? null : item.id)}
               aria-expanded={isOpen}
-              aria-controls={`product-accordion-${item.id}`}
+              aria-controls={`accordion-${item.id}`}
             >
               <span>{item.title}</span>
-              <span className="product-accordion-icon" aria-hidden="true">
+              <span className="accordion-sign" aria-hidden="true">
                 {isOpen ? "−" : "+"}
               </span>
             </button>
-            <div
-              id={`product-accordion-${item.id}`}
-              className={`product-accordion-panel${isOpen ? " product-accordion-panel--open" : ""}`}
-              hidden={!isOpen}
-            >
-              <p>{item.content}</p>
+            <div id={`accordion-${item.id}`} className="accordion-panel" hidden={!isOpen}>
+              <p className="t-meta">{item.content}</p>
             </div>
           </div>
         );
       })}
-    </section>
+    </div>
   );
 }

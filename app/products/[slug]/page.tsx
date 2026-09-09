@@ -1,23 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ProductBuyColumn } from "@/components/product/ProductBuyColumn";
+import { ProductCard } from "@/components/ProductCard";
 import { ProductDetailsAccordion } from "@/components/product/ProductDetailsAccordion";
-import { ProductSpecsTable } from "@/components/product/ProductSpecsTable";
-import { ProductStorySection } from "@/components/product/ProductStorySection";
-import { RelatedProductCard } from "@/components/product/RelatedProductCard";
+import { ProductPurchasePanel } from "@/components/product/ProductPurchasePanel";
 import { ProductGallery } from "@/components/ProductGallery";
 import {
   getAllProductSlugs,
   getProductBySlug,
   getRelatedProducts,
+  formatPrice,
 } from "@/lib/products";
-import {
-  buildProductSpecs,
-  getCategoryEyebrow,
-  getProductStory,
-  getTrustBadges,
-} from "@/lib/product-page";
+import { buildProductSpecs, getCategoryEyebrow, getProductStory } from "@/lib/product-page";
 import { CATEGORY_LABELS } from "@/types/product";
 
 interface ProductPageProps {
@@ -28,16 +22,11 @@ export async function generateStaticParams() {
   return getAllProductSlugs().map((slug) => ({ slug }));
 }
 
-export async function generateMetadata({
-  params,
-}: ProductPageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
   const { slug } = await params;
   const product = getProductBySlug(slug);
-  if (!product) return { title: "Product Not Found" };
-  return {
-    title: product.name,
-    description: product.shortDescription,
-  };
+  if (!product) return { title: "Product not found" };
+  return { title: product.name, description: product.shortDescription };
 }
 
 const SHIPPING_TEXT =
@@ -50,75 +39,112 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params;
   const product = getProductBySlug(slug);
 
-  if (!product) {
-    notFound();
-  }
+  if (!product) notFound();
 
   const related = getRelatedProducts(product);
   const specs = buildProductSpecs(product);
   const story = getProductStory(product);
-  const trustBadges = getTrustBadges(product);
-  const categoryLabel = getCategoryEyebrow(product);
 
-  const warrantyCareParts = [
+  const warrantyCare = [
     product.warranty && `Warranty: ${product.warranty}.`,
     product.careInstructions,
-  ].filter(Boolean);
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   const accordionItems = [
     { id: "shipping", title: "Shipping", content: SHIPPING_TEXT },
     { id: "returns", title: "Returns", content: RETURNS_TEXT },
-    {
-      id: "warranty",
-      title: "Warranty & Care",
-      content: warrantyCareParts.join(" "),
-    },
-  ];
+    { id: "care", title: "Warranty and care", content: warrantyCare },
+  ].filter((item) => item.content);
+
+  // The long description often restates the story's opening; showing both
+  // reads as padding, so the duplicate is dropped.
+  const showLongDescription =
+    product.longDescription &&
+    product.longDescription.trim() !== story.trim() &&
+    !product.longDescription.startsWith(story.slice(0, 40));
 
   return (
-    <div className="product-page">
-      <div className="product-page-bg" aria-hidden="true" />
-
-      <div className="page-container product-page-inner">
-        <nav className="product-breadcrumb" aria-label="Breadcrumb">
+    <article className="pdp">
+      <div className="page-container">
+        <nav className="crumbs" aria-label="Breadcrumb">
           <Link href="/shop">Shop</Link>
           <span aria-hidden="true">/</span>
           <Link href={`/shop?category=${product.category}`}>
             {CATEGORY_LABELS[product.category]}
           </Link>
           <span aria-hidden="true">/</span>
-          <span className="product-breadcrumb-current">{product.name}</span>
+          <span aria-current="page">{product.name}</span>
         </nav>
 
-        <div className="product-hero">
+        <div className="pdp-top">
           <ProductGallery product={product} />
-          <ProductBuyColumn
-            product={product}
-            categoryLabel={categoryLabel}
-            trustBadges={trustBadges}
-          />
+
+          <div className="buy">
+            <p className="eyebrow">{getCategoryEyebrow(product)}</p>
+            <h1 className="t-h1 buy-title">{product.name}</h1>
+            <p className="t-lead buy-lead">{product.shortDescription}</p>
+
+            <div className="buy-price-row">
+              <span className="t-price">{formatPrice(product.price)}</span>
+              <span className={product.inStock ? "buy-stock" : "buy-stock buy-stock--out"}>
+                {product.inStock ? "In stock" : "Sold out"}
+              </span>
+            </div>
+
+            <ProductPurchasePanel product={product} />
+
+            {!product.checkoutUrl ? (
+              <p className="t-meta buy-note">
+                Demo storefront — the cart lives in your browser and takes no payment.
+              </p>
+            ) : null}
+
+            <dl className="buy-specs">
+              {specs.map((spec) => (
+                <div key={spec.label} className="buy-spec">
+                  <dt>{spec.label}</dt>
+                  <dd>{spec.value}</dd>
+                </div>
+              ))}
+            </dl>
+
+            {product.bestUses.length > 0 ? (
+              <p className="t-meta buy-uses">
+                <span className="buy-uses-label">Built for</span> {product.bestUses.join(" · ")}
+              </p>
+            ) : null}
+          </div>
         </div>
 
-        <div className="product-details-grid">
-          <ProductSpecsTable specs={specs} />
-          <ProductStorySection story={story} longDescription={product.longDescription} />
-        </div>
-
-        <ProductDetailsAccordion items={accordionItems} />
-
-        {related.length > 0 && (
-          <section className="product-related" aria-labelledby="product-related-heading">
-            <h2 id="product-related-heading" className="product-section-heading">
-              You May Also Like
+        <section className="pdp-story editorial" aria-labelledby="pdp-story-heading">
+          <div>
+            <h2 id="pdp-story-heading" className="t-h2">
+              The making
             </h2>
-            <div className="product-related-grid">
+            <p className="t-body pdp-story-lead">{story}</p>
+            {showLongDescription ? (
+              <p className="t-body pdp-story-lead">{product.longDescription}</p>
+            ) : null}
+          </div>
+
+          <ProductDetailsAccordion items={accordionItems} />
+        </section>
+
+        {related.length > 0 ? (
+          <section className="pdp-related" aria-labelledby="pdp-related-heading">
+            <h2 id="pdp-related-heading" className="t-h3">
+              More {CATEGORY_LABELS[product.category].toLowerCase()}
+            </h2>
+            <div className="pdp-related-grid">
               {related.map((item) => (
-                <RelatedProductCard key={item.id} product={item} />
+                <ProductCard key={item.id} product={item} />
               ))}
             </div>
           </section>
-        )}
+        ) : null}
       </div>
-    </div>
+    </article>
   );
 }

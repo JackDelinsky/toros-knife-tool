@@ -1,45 +1,31 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState, type CSSProperties } from "react";
-import { CATEGORY_LABELS } from "@/types/product";
-import type { ProductCategory } from "@/types/product";
+import { usePathname } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { TorosLogo } from "@/components/ui/TorosLogo";
 
 const PRODUCT_LINKS = [
-  { label: "All Products", href: "/shop" },
-  { label: "Fixed Blades", href: "/shop?category=fixed-blades" },
-  { label: "Neck Knives", href: "/shop?category=neck-knives" },
-  { label: "Foldable Knives", href: "/shop?category=folding-knives" },
-  { label: "Custom Knives", href: "/shop?category=custom-knives" },
+  { label: "All products", href: "/shop" },
+  { label: "Fixed blades", href: "/shop?category=fixed-blades" },
+  { label: "Custom knives", href: "/shop?category=custom-knives" },
+  { label: "Folding knives", href: "/shop?category=folding-knives" },
+  { label: "Neck knives", href: "/shop?category=neck-knives" },
   { label: "Misty Series", href: "/shop?tag=misty" },
-  { label: "Mystery Jellybean Bags", href: "/mystery-bag" },
+  { label: "Mystery Jellybean bags", href: "/mystery-bag" },
 ];
 
 const ACCOUNT_LINKS = [
-  { href: "/login", label: "Login" },
-  { href: "/register", label: "Register" },
+  { href: "/login", label: "Sign in" },
+  { href: "/register", label: "Create account" },
   { href: "/cart", label: "Cart" },
 ];
 
-type NavDropdownId = "products" | "account";
-
-const NAV_LINK_CLASS =
-  "rounded-sm px-3 py-2 text-xs font-medium uppercase tracking-wider text-toros-sand/70 transition-colors hover:text-toros-brass-light";
-
-const DROPDOWN_ITEM_CLASS =
-  "block px-4 py-2.5 text-xs font-medium uppercase tracking-wider text-toros-sand/80 transition-colors hover:bg-toros-surface hover:text-toros-brass-light";
-
 const LEAVE_DELAY_MS = 140;
 
-function ChevronIcon({ open }: { open?: boolean }) {
+function Chevron({ open }: { open?: boolean }) {
   return (
-    <svg
-      className={`h-3.5 w-3.5 transition-transform duration-300 ease-out ${open ? "rotate-180" : ""}`}
-      viewBox="0 0 20 20"
-      fill="currentColor"
-      aria-hidden="true"
-    >
+    <svg className={`nav-chevron ${open ? "nav-chevron--open" : ""}`} viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
       <path
         fillRule="evenodd"
         d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.73a.75.75 0 111.06 1.06l-4.24 4.25a.75.75 0 01-1.06 0L5.21 8.27a.75.75 0 01.02-1.06z"
@@ -49,68 +35,64 @@ function ChevronIcon({ open }: { open?: boolean }) {
   );
 }
 
-function HeaderNavDropdown({
+function NavMenu({
   id,
   label,
   links,
   align = "left",
-  staggerItems = false,
-  activeDropdown,
-  onOpen,
-  onScheduleClose,
-  onCancelClose,
+  openId,
+  setOpenId,
 }: {
-  id: NavDropdownId;
+  id: string;
   label: string;
   links: { href: string; label: string }[];
   align?: "left" | "right";
-  staggerItems?: boolean;
-  activeDropdown: NavDropdownId | null;
-  onOpen: (id: NavDropdownId) => void;
-  onScheduleClose: () => void;
-  onCancelClose: () => void;
+  openId: string | null;
+  setOpenId: (id: string | null) => void;
 }) {
-  const open = activeDropdown === id;
+  const open = openId === id;
+  const timer = useRef<number | null>(null);
 
-  function handleEnter() {
-    onCancelClose();
-    onOpen(id);
+  function cancel() {
+    if (timer.current !== null) window.clearTimeout(timer.current);
+    timer.current = null;
   }
 
-  function handleLeave() {
-    onScheduleClose();
-  }
+  useEffect(() => cancel, []);
 
   return (
-    <div className="relative" onMouseEnter={handleEnter} onMouseLeave={handleLeave}>
+    <div
+      className="nav-menu"
+      onMouseEnter={() => {
+        cancel();
+        setOpenId(id);
+      }}
+      onMouseLeave={() => {
+        cancel();
+        timer.current = window.setTimeout(() => setOpenId(null), LEAVE_DELAY_MS);
+      }}
+    >
       <button
         type="button"
-        className={`${NAV_LINK_CLASS} inline-flex items-center gap-1`}
+        className="nav-link nav-link--menu"
         aria-haspopup="true"
         aria-expanded={open}
+        // Keyboard users get the same menu without needing a hover.
+        onClick={() => setOpenId(open ? null : id)}
       >
         {label}
-        <ChevronIcon open={open} />
+        <Chevron open={open} />
       </button>
 
-      <div
-        className={`nav-dropdown-flyout absolute top-full z-[60] min-w-[13rem] pt-2 ${
-          align === "right" ? "right-0" : "left-0"
-        } ${open ? "nav-dropdown-flyout--open" : ""}`}
-      >
-        <div
-          className={`nav-dropdown-panel py-1.5 ${open ? "nav-dropdown-panel--open" : ""}`}
-          role="menu"
-        >
-          {links.map((link, index) => (
+      <div className={`nav-flyout ${align === "right" ? "nav-flyout--right" : ""}`} hidden={!open}>
+        <div className="nav-panel" role="menu">
+          {links.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className={`${staggerItems ? "nav-dropdown-stagger-item" : ""} ${DROPDOWN_ITEM_CLASS} ${
-                open && staggerItems ? "nav-dropdown-stagger-item--open" : ""
-              }`}
-              style={staggerItems ? ({ "--nav-item-index": index } as CSSProperties) : undefined}
+              className="nav-item"
               role="menuitem"
+              onClick={() => setOpenId(null)}
             >
               {link.label}
             </Link>
@@ -122,219 +104,115 @@ function HeaderNavDropdown({
 }
 
 export function Header() {
+  const pathname = usePathname() ?? "/";
   const [menuOpen, setMenuOpen] = useState(false);
-  const [mobileProductsOpen, setMobileProductsOpen] = useState(false);
-  const [mobileAccountOpen, setMobileAccountOpen] = useState(false);
-  const [activeDropdown, setActiveDropdown] = useState<NavDropdownId | null>(null);
-  const closeTimerRef = useRef<number | null>(null);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [mobileSection, setMobileSection] = useState<string | null>(null);
 
-  function cancelDropdownClose() {
-    if (closeTimerRef.current !== null) {
-      window.clearTimeout(closeTimerRef.current);
-      closeTimerRef.current = null;
-    }
-  }
-
-  function scheduleDropdownClose() {
-    cancelDropdownClose();
-    closeTimerRef.current = window.setTimeout(() => setActiveDropdown(null), LEAVE_DELAY_MS);
-  }
-
-  function openDropdown(id: NavDropdownId) {
-    setActiveDropdown(id);
-  }
-
-  function closeMobileMenu() {
+  // A route change should never leave a menu hanging open behind the new page.
+  // Adjusted during render rather than in an effect: an effect would paint the
+  // new route once with the old menu still open, then re-render to close it.
+  const [navPath, setNavPath] = useState(pathname);
+  if (navPath !== pathname) {
+    setNavPath(pathname);
     setMenuOpen(false);
-    setMobileProductsOpen(false);
-    setMobileAccountOpen(false);
+    setOpenId(null);
+    setMobileSection(null);
   }
 
-  const backdropOpen = activeDropdown !== null;
+  const isShop = pathname.startsWith("/shop") || pathname.startsWith("/products") || pathname.startsWith("/mystery-bag");
 
   return (
-    <>
-      <div
-        className={`nav-dropdown-backdrop fixed inset-x-0 bottom-0 top-14 z-40 sm:top-15 ${
-          backdropOpen ? "nav-dropdown-backdrop--open" : ""
-        }`}
-        onMouseEnter={scheduleDropdownClose}
-        aria-hidden="true"
-      />
-
-      <header className="sticky top-0 z-50 border-b border-toros-border/60 bg-toros-black/92 backdrop-blur-md shadow-[0_1px_0_rgba(168,137,74,0.06)]">
-        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:h-15 sm:px-6 lg:px-8">
-          <Link
-            href="/"
-            className="group flex items-center gap-2.5"
-            onClick={closeMobileMenu}
-          >
-            <TorosLogo size="sm" priority linked={false} className="transition-opacity group-hover:opacity-90" />
-            <span className="hidden font-display text-lg font-bold tracking-[0.22em] text-toros-parchment transition-colors group-hover:text-toros-brass-light sm:inline">
-              TOROS
-            </span>
-            <span className="hidden text-[9px] font-bold uppercase tracking-[0.2em] text-toros-steel md:inline">
-              Knife & Tool
-            </span>
-          </Link>
-
-          <nav className="hidden items-center gap-0.5 lg:flex">
-            <Link href="/" className={NAV_LINK_CLASS}>Home</Link>
-
-            <HeaderNavDropdown
-              id="products"
-              label="Products"
-              links={PRODUCT_LINKS}
-              staggerItems
-              activeDropdown={activeDropdown}
-              onOpen={openDropdown}
-              onScheduleClose={scheduleDropdownClose}
-              onCancelClose={cancelDropdownClose}
-            />
-
-            <Link href="/about" className={NAV_LINK_CLASS}>About Us</Link>
-            <Link href="/contact" className={NAV_LINK_CLASS}>Contact Us</Link>
-
-            <HeaderNavDropdown
-              id="account"
-              label="Account"
-              links={ACCOUNT_LINKS}
-              align="right"
-              activeDropdown={activeDropdown}
-              onOpen={openDropdown}
-              onScheduleClose={scheduleDropdownClose}
-              onCancelClose={cancelDropdownClose}
-            />
-          </nav>
-
-          <button
-            type="button"
-            className="flex h-9 w-9 items-center justify-center rounded-sm text-toros-parchment lg:hidden"
-            onClick={() => setMenuOpen(!menuOpen)}
-            aria-expanded={menuOpen}
-            aria-label="Toggle menu"
-          >
-            {menuOpen ? (
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            ) : (
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            )}
-          </button>
-        </div>
-
-        {menuOpen && (
-          <nav className="border-t border-toros-border bg-toros-black px-4 py-3 lg:hidden">
-            <div className="flex flex-col gap-0.5">
-              <Link
-                href="/"
-                className="rounded-sm px-3 py-2.5 text-sm font-medium text-toros-sand hover:bg-toros-surface hover:text-toros-brass"
-                onClick={closeMobileMenu}
-              >
-                Home
-              </Link>
-
-              <button
-                type="button"
-                className="flex w-full items-center justify-between rounded-sm px-3 py-2.5 text-sm font-medium text-toros-sand hover:bg-toros-surface hover:text-toros-brass"
-                onClick={() => setMobileProductsOpen(!mobileProductsOpen)}
-                aria-expanded={mobileProductsOpen}
-              >
-                Products
-                <ChevronIcon open={mobileProductsOpen} />
-              </button>
-              {mobileProductsOpen && (
-                <div className="mb-1 ml-2 flex flex-col gap-0.5 border-l border-toros-border/60 pl-3">
-                  {PRODUCT_LINKS.map((link) => (
-                    <Link
-                      key={link.href}
-                      href={link.href}
-                      className="rounded-sm px-3 py-2 text-sm text-toros-steel hover:bg-toros-surface hover:text-toros-brass"
-                      onClick={closeMobileMenu}
-                    >
-                      {link.label}
-                    </Link>
-                  ))}
-                </div>
-              )}
-
-              <Link
-                href="/about"
-                className="rounded-sm px-3 py-2.5 text-sm font-medium text-toros-sand hover:bg-toros-surface hover:text-toros-brass"
-                onClick={closeMobileMenu}
-              >
-                About Us
-              </Link>
-              <Link
-                href="/contact"
-                className="rounded-sm px-3 py-2.5 text-sm font-medium text-toros-sand hover:bg-toros-surface hover:text-toros-brass"
-                onClick={closeMobileMenu}
-              >
-                Contact Us
-              </Link>
-
-              <button
-                type="button"
-                className="flex w-full items-center justify-between rounded-sm px-3 py-2.5 text-sm font-medium text-toros-sand hover:bg-toros-surface hover:text-toros-brass"
-                onClick={() => setMobileAccountOpen(!mobileAccountOpen)}
-                aria-expanded={mobileAccountOpen}
-              >
-                Account
-                <ChevronIcon open={mobileAccountOpen} />
-              </button>
-              {mobileAccountOpen && (
-                <div className="mb-1 ml-2 flex flex-col gap-0.5 border-l border-toros-border/60 pl-3">
-                  {ACCOUNT_LINKS.map((link) => (
-                    <Link
-                      key={link.href}
-                      href={link.href}
-                      className="rounded-sm px-3 py-2 text-sm text-toros-steel hover:bg-toros-surface hover:text-toros-brass"
-                      onClick={closeMobileMenu}
-                    >
-                      {link.label}
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
-          </nav>
-        )}
-      </header>
-    </>
-  );
-}
-
-export function CategoryNav({ active }: { active?: ProductCategory }) {
-  const categories = Object.entries(CATEGORY_LABELS) as [ProductCategory, string][];
-
-  return (
-    <div className="flex flex-wrap gap-2">
-      <Link
-        href="/shop"
-        className={`rounded-sm px-3.5 py-2 text-xs font-bold uppercase tracking-wider transition-colors ${
-          !active
-            ? "bg-toros-brass text-toros-black"
-            : "border border-toros-border text-toros-steel hover:border-toros-brass/40 hover:text-toros-brass"
-        }`}
-      >
-        All
-      </Link>
-      {categories.map(([key, label]) => (
-        <Link
-          key={key}
-          href={`/shop?category=${key}`}
-          className={`rounded-sm px-3.5 py-2 text-xs font-bold uppercase tracking-wider transition-colors ${
-            active === key
-              ? "bg-toros-brass text-toros-black"
-              : "border border-toros-border text-toros-steel hover:border-toros-brass/40 hover:text-toros-brass"
-          }`}
-        >
-          {label}
+    <header className="site-header">
+      <div className="site-header-inner">
+        <Link href="/" className="brand" aria-label="Toros Knife & Tool — home">
+          <TorosLogo size="sm" linked={false} className="brand-mark" />
+          <span className="brand-name">Toros</span>
+          <span className="brand-sub">Knife &amp; Tool</span>
         </Link>
-      ))}
-    </div>
+
+        <nav className="nav" aria-label="Main">
+          <NavMenu
+            id="products"
+            label="Shop"
+            links={PRODUCT_LINKS}
+            openId={openId}
+            setOpenId={setOpenId}
+          />
+          <Link
+            href="/about"
+            className="nav-link"
+            aria-current={pathname.startsWith("/about") ? "page" : undefined}
+          >
+            About
+          </Link>
+          <Link
+            href="/contact"
+            className="nav-link"
+            aria-current={pathname.startsWith("/contact") ? "page" : undefined}
+          >
+            Contact
+          </Link>
+          <NavMenu
+            id="account"
+            label="Account"
+            links={ACCOUNT_LINKS}
+            align="right"
+            openId={openId}
+            setOpenId={setOpenId}
+          />
+        </nav>
+
+        {/* Shop is the one destination worth a permanent target on mobile. */}
+        <Link href="/shop" className="nav-shop-cta" aria-current={isShop ? "page" : undefined}>
+          Shop
+        </Link>
+
+        <button
+          type="button"
+          className="nav-toggle"
+          onClick={() => setMenuOpen((v) => !v)}
+          aria-expanded={menuOpen}
+          aria-controls="mobile-nav"
+          aria-label={menuOpen ? "Close menu" : "Open menu"}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+            {menuOpen ? (
+              <path strokeLinecap="round" strokeWidth={1.6} d="M6 18L18 6M6 6l12 12" />
+            ) : (
+              <path strokeLinecap="round" strokeWidth={1.6} d="M4 7h16M4 12h16M4 17h16" />
+            )}
+          </svg>
+        </button>
+      </div>
+
+      <nav id="mobile-nav" className="mobile-nav" aria-label="Main" hidden={!menuOpen}>
+        {[
+          { id: "shop", label: "Shop", links: PRODUCT_LINKS },
+          { id: "account", label: "Account", links: ACCOUNT_LINKS },
+        ].map((section) => (
+          <div key={section.id}>
+            <button
+              type="button"
+              className="mobile-row mobile-row--button"
+              onClick={() => setMobileSection((v) => (v === section.id ? null : section.id))}
+              aria-expanded={mobileSection === section.id}
+            >
+              {section.label}
+              <Chevron open={mobileSection === section.id} />
+            </button>
+            <div className="mobile-sub" hidden={mobileSection !== section.id}>
+              {section.links.map((link) => (
+                <Link key={link.href} href={link.href} className="mobile-row mobile-row--sub">
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+        ))}
+        <Link href="/about" className="mobile-row">About</Link>
+        <Link href="/contact" className="mobile-row">Contact</Link>
+      </nav>
+    </header>
   );
 }

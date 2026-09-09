@@ -2,71 +2,69 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { resolveProductImage } from "@/lib/brand-images";
+import { resolveProductCardImage, resolveProductImage } from "@/lib/brand-images";
 import type { Product } from "@/types/product";
 
 interface ProductGalleryProps {
   product: Product;
 }
 
+/**
+ * The media stage.
+ *
+ * The frame owns the aspect ratio, so the box is reserved before the photo
+ * decodes and the layout never collapses or jumps while it loads. Thumbnails
+ * appear only when there is genuinely more than one photograph — a single
+ * thumbnail under a single image is a control that does nothing.
+ */
 export function ProductGallery({ product }: ProductGalleryProps) {
-  const imageCount = Math.max(product.images.length, 1);
   const [activeIndex, setActiveIndex] = useState(0);
-  const activeSrc = resolveProductImage(
-    product.slug,
-    product.category,
-    product.images,
-    activeIndex,
-  );
+  const extra = product.images.slice(1);
+  const hasMultiple = extra.length > 0;
+
+  const src =
+    activeIndex === 0
+      ? resolveProductCardImage(product.slug, product.images)
+      : resolveProductImage(product.slug, product.category, product.images, activeIndex);
 
   return (
-    <div className="product-gallery">
-      <div className="product-gallery-stage">
-        <div
-          className="product-gallery-glow"
-          aria-hidden="true"
-        />
+    <div className="gallery">
+      <div className="media media--product gallery-stage">
         <Image
-          src={activeSrc}
-          alt={product.name}
-          width={960}
-          height={1200}
-          priority
-          className="product-gallery-image"
-          sizes="(max-width: 1024px) 92vw, 42vw"
+          src={src}
+          alt={`${product.name} — ${product.steel} blade with a ${product.handleMaterial} handle`}
+          fill
+          loading="eager"
+          fetchPriority="high"
+          className="gallery-img"
+          sizes="(max-width: 900px) 94vw, 52vw"
         />
       </div>
 
-      {imageCount > 1 && (
-        <div className="product-gallery-thumbs">
-          {Array.from({ length: imageCount }).map((_, i) => {
-            const thumbSrc = resolveProductImage(
-              product.slug,
-              product.category,
-              product.images,
-              i,
-            );
-            return (
-              <button
-                key={i}
-                type="button"
-                onClick={() => setActiveIndex(i)}
-                className={`product-gallery-thumb${activeIndex === i ? " product-gallery-thumb--active" : ""}`}
-                aria-label={`View image ${i + 1}`}
-                aria-current={activeIndex === i ? "true" : undefined}
-              >
+      {hasMultiple ? (
+        <div className="gallery-thumbs">
+          {product.images.map((_, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => setActiveIndex(i)}
+              className="gallery-thumb"
+              aria-label={`Show photograph ${i + 1} of ${product.images.length}`}
+              aria-current={activeIndex === i ? "true" : undefined}
+            >
+              <span className="media media--square">
                 <Image
-                  src={thumbSrc}
+                  src={resolveProductImage(product.slug, product.category, product.images, i)}
                   alt=""
-                  width={80}
-                  height={80}
-                  className="product-gallery-thumb-img"
+                  fill
+                  sizes="80px"
+                  className="gallery-thumb-img"
                 />
-              </button>
-            );
-          })}
+              </span>
+            </button>
+          ))}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

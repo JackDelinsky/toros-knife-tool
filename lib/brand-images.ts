@@ -2,9 +2,10 @@ import type { ProductCategory } from "@/types/product";
 import {
   BRAND_IMAGE_PATHS,
   CATEGORY_IMAGE_PATHS,
-  IMAGES_ROOT,
   JELLYBEAN_IMAGE_PATHS,
   USE_CASE_IMAGE_PATHS,
+  productCardImage,
+  productMainImage,
 } from "@/lib/image-paths";
 
 /** Homepage & section photography — local assets in public/images/ */
@@ -29,12 +30,23 @@ export const CATEGORY_IMAGES = CATEGORY_IMAGE_PATHS;
 
 export const USE_CASE_IMAGES = USE_CASE_IMAGE_PATHS;
 
+/** Full-resolution photograph, for the product page's media stage. */
 export function resolveProductImage(
   slug: string,
-  category: ProductCategory,
+  _category: ProductCategory,
   images: string[],
   index = 0,
 ): string {
-  if (images[index]) return images[index];
-  return `${IMAGES_ROOT}/products/${slug}.jpg`;
+  return images[index] ?? productMainImage(slug);
+}
+
+/**
+ * The consistently-framed derivative, for anywhere a product appears in a
+ * grid or list. Products that ship an explicit image (the mystery bag uses a
+ * group shot rather than a single knife) keep it.
+ */
+export function resolveProductCardImage(slug: string, images: string[]): string {
+  const explicit = images[0];
+  if (explicit && !explicit.startsWith(`/images/products/${slug}/`)) return explicit;
+  return productCardImage(slug);
 }

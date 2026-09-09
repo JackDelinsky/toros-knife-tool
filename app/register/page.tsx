@@ -2,21 +2,22 @@ import type { Metadata } from "next";
 import { SimplePage, SimplePageLink } from "@/components/ui/SimplePage";
 
 export const metadata: Metadata = {
-  title: "Register",
+  title: "Create an account",
   description: "Create a Toros Knife & Tool account.",
 };
 
 export default function RegisterPage() {
   return (
-    <SimplePage eyebrow="Account" title="Register">
-      <p>
-        Registration will let you track orders, save builds, and manage your cart in one place. We&apos;re
-        putting the finishing touches on it now.
+    <SimplePage eyebrow="Account" title="Create an account">
+      <p className="t-body">
+        Registration will let you track orders and save builds in one place. It is not built
+        yet, so this page collects nothing. If you want to be told when it opens, the
+        newsletter on the homepage is the place.
       </p>
-      <p>
-        <SimplePageLink href="/shop">Shop knives</SimplePageLink>
+      <p className="t-body">
+        <SimplePageLink href="/shop">Browse the shop</SimplePageLink>
         {" · "}
-        <SimplePageLink href="/login">Sign in</SimplePageLink>
+        <SimplePageLink href="/contact">Ask us something</SimplePageLink>
       </p>
     </SimplePage>
   );

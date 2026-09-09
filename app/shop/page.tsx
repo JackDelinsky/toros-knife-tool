@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { ProductCard } from "@/components/ProductCard";
-import { CategoryNav } from "@/components/Header";
-import { SectionHeader } from "@/components/ui/SectionHeader";
+import { CategoryNav } from "@/components/shop/CategoryNav";
 import { getShopProducts, getProductsByCategory, getProductsByTag } from "@/lib/products";
 import { MYSTERY_BAG_SLUG } from "@/lib/image-paths";
 import {
@@ -11,9 +10,9 @@ import {
 } from "@/types/product";
 
 export const metadata: Metadata = {
-  title: "Shop All Knives",
+  title: "Shop all knives",
   description:
-    "Browse handcrafted fixed blades, neck knives, folding knives, custom commissions, and axes from Toros Knife & Tool.",
+    "Browse handcrafted fixed blades, neck knives, folding knives and custom commissions from Toros Knife & Tool.",
 };
 
 const VALID_CATEGORIES = new Set<string>([
@@ -43,46 +42,41 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
       ? getProductsByCategory(category).filter((p) => p.slug !== MYSTERY_BAG_SLUG)
       : getShopProducts();
 
-  const pageTitle = tagParam === "misty"
-    ? "Misty Series"
-    : category
-      ? CATEGORY_LABELS[category]
-      : "Shop All Knives";
+  const title =
+    tagParam === "misty" ? "Misty Series" : category ? CATEGORY_LABELS[category] : "Every blade";
 
-  const pageDescription = tagParam === "misty"
-    ? "In-house Misty Series blades designed and forged by Aydin — raw utility, rebar craft, and compact puukko-inspired builds."
-    : category
-      ? CATEGORY_DESCRIPTIONS[category]
-      : "Every Toros blade is hand-finished in our workshop, built for hunters, campers, collectors, and those who value craft.";
+  const description =
+    tagParam === "misty"
+      ? "In-house Misty Series blades, designed and forged by Aydin — raw utility, rebar craft and compact puukko-inspired builds."
+      : category
+        ? CATEGORY_DESCRIPTIONS[category]
+        : "Every Toros blade is hand-finished in the workshop, for hunters, campers, collectors and anyone who values the craft.";
 
   return (
-    <div className="page-container section-pad-sm">
-      <SectionHeader
-        eyebrow="Shop"
-        title={pageTitle}
-        description={pageDescription}
-        size="large"
-      />
+    <div className="catalog">
+      <div className="page-container">
+        <header className="catalog-head">
+          <h1 className="t-h1">{title}</h1>
+          <p className="t-lead catalog-lead">{description}</p>
+        </header>
 
-      <div className="mt-10 border-y border-toros-border/50 py-6">
-        <CategoryNav active={category} />
+        <div className="catalog-bar">
+          <CategoryNav active={category} />
+          <p className="catalog-count">
+            {products.length} {products.length === 1 ? "blade" : "blades"}
+          </p>
+        </div>
+
+        {products.length > 0 ? (
+          <div className="catalog-grid">
+            {products.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        ) : (
+          <p className="catalog-empty">Nothing in this category yet.</p>
+        )}
       </div>
-
-      <p className="mt-8 text-xs font-bold uppercase tracking-[0.18em] text-toros-steel">
-        {products.length} {products.length === 1 ? "blade" : "blades"}
-      </p>
-
-      {products.length > 0 ? (
-        <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
-      ) : (
-        <div className="mt-12 rounded-sm border border-toros-border bg-toros-surface/50 p-12 text-center">
-          <p className="text-toros-sand/70">No products in this category yet.</p>
-        </div>
-      )}
     </div>
   );
 }

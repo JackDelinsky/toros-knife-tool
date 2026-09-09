@@ -1,12 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/Button";
 
-const INPUT_CLASS =
-  "w-full rounded-sm border border-toros-border bg-toros-surface/80 px-4 py-3 text-sm text-toros-parchment placeholder:text-toros-steel focus:border-toros-brass/50 focus:outline-none focus:ring-1 focus:ring-toros-brass/30";
-
-const LABEL_CLASS = "mb-1.5 block text-[10px] font-bold uppercase tracking-[0.18em] text-toros-tan";
+const INPUT_CLASS = "field";
+const LABEL_CLASS = "field-label";
 
 const SUBJECT_OPTIONS = [
   { value: "general", label: "General inquiry" },
@@ -73,17 +70,13 @@ export function ContactForm() {
 
   if (submitted) {
     return (
-      <div className="rounded-sm border border-toros-brass/30 bg-toros-brass/10 px-6 py-8">
-        <p className="font-display text-xl font-semibold text-toros-brass-light">Message sent.</p>
-        <p className="mt-2 text-sm leading-relaxed text-toros-sand/80">
-          Murat and Aydin will review your note and get back to you soon. For urgent questions, you
-          can also message us on Instagram.
+      <div className="cform cform--sent" role="status">
+        <p className="t-h3">Message sent.</p>
+        <p className="t-meta cform-sent-note">
+          Murat and Aydin will read it and get back to you. For anything urgent, a direct message
+          on Instagram reaches the same two people.
         </p>
-        <button
-          type="button"
-          onClick={() => setSubmitted(false)}
-          className="mt-5 text-xs font-bold uppercase tracking-wider text-toros-brass transition-colors hover:text-toros-brass-light"
-        >
+        <button type="button" onClick={() => setSubmitted(false)} className="btn btn--quiet">
           Send another message
         </button>
       </div>
@@ -91,16 +84,8 @@ export function ContactForm() {
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="rounded-sm border border-toros-border bg-toros-charcoal/40 p-6 sm:p-8"
-    >
-      <p className="font-display text-lg font-semibold text-toros-parchment">Send a message</p>
-      <p className="mt-1 text-sm text-toros-steel">
-        Share a few details and we&apos;ll follow up from the workshop.
-      </p>
-
-      <div className="mt-6 space-y-5">
+    <form onSubmit={handleSubmit} className="cform" noValidate={false}>
+      <div className="cform-fields">
         <div>
           <label htmlFor="contact-name" className={LABEL_CLASS}>Full name</label>
           <input
@@ -116,7 +101,7 @@ export function ContactForm() {
           />
         </div>
 
-        <div className="grid gap-5 sm:grid-cols-2">
+        <div className="cform-pair">
           <div>
             <label htmlFor="contact-email" className={LABEL_CLASS}>Email</label>
             <input
@@ -133,7 +118,7 @@ export function ContactForm() {
           </div>
           <div>
             <label htmlFor="contact-phone" className={LABEL_CLASS}>
-              Phone <span className="font-normal normal-case tracking-normal text-toros-steel">(optional)</span>
+              Phone <span className="field-optional">(optional)</span>
             </label>
             <input
               id="contact-phone"
@@ -156,10 +141,10 @@ export function ContactForm() {
             value={form.subject}
             onChange={(e) => updateField("subject", e.target.value)}
             required
-            className={`${INPUT_CLASS} cursor-pointer`}
+            className={INPUT_CLASS}
           >
             {SUBJECT_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value} className="bg-toros-charcoal">
+              <option key={option.value} value={option.value} className="cform-option">
                 {option.label}
               </option>
             ))}
@@ -176,22 +161,22 @@ export function ContactForm() {
             required
             rows={5}
             placeholder="Tell us about the knife you're looking for, your order, or any questions..."
-            className={`${INPUT_CLASS} resize-y min-h-[8rem]`}
+            className={`${INPUT_CLASS} cform-textarea`}
           />
         </div>
       </div>
 
       {error ? (
-        <p className="mt-4 text-sm text-toros-oxblood-light" role="alert">{error}</p>
+        <p className="field-error cform-error" role="alert">
+          {error}
+        </p>
       ) : null}
 
-      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <Button type="submit" size="lg" disabled={submitting} className="w-full sm:w-auto">
-          {submitting ? "Sending…" : "Send Message"}
-        </Button>
-        <p className="text-[10px] text-toros-steel-dark">
-          We typically respond within a few business days.
-        </p>
+      <div className="cform-foot">
+        <button type="submit" className="btn btn--primary" disabled={submitting}>
+          {submitting ? "Sending…" : "Send message"}
+        </button>
+        <p className="t-meta">Usually answered within a few business days.</p>
       </div>
     </form>
   );

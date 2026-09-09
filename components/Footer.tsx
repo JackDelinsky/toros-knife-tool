@@ -1,126 +1,82 @@
 import Link from "next/link";
-import { MosaicDivider } from "@/components/ui/GeometricAccents";
 import { TorosLogo } from "@/components/ui/TorosLogo";
 
 const INSTAGRAM_URL = "https://www.instagram.com/toros_knife";
 
-const PRODUCT_LINKS = [
-  { href: "/shop", label: "All Products" },
-  { href: "/shop?category=fixed-blades", label: "Fixed Blades" },
-  { href: "/shop?category=neck-knives", label: "Neck Knives" },
-  { href: "/shop?category=folding-knives", label: "Foldable Knives" },
-  { href: "/shop?category=custom-knives", label: "Custom Knives" },
-  { href: "/shop?tag=misty", label: "Misty Series" },
-  { href: "/mystery-bag", label: "Mystery Jellybean Bags" },
+const SHOP_LINKS = [
+  { href: "/shop", label: "All products" },
+  { href: "/shop?category=fixed-blades", label: "Fixed blades" },
+  { href: "/shop?category=custom-knives", label: "Custom knives" },
+  { href: "/shop?category=folding-knives", label: "Folding knives" },
+  { href: "/shop?category=neck-knives", label: "Neck knives" },
+  { href: "/mystery-bag", label: "Mystery Jellybean bags" },
 ];
 
 const COMPANY_LINKS = [
-  { href: "/about", label: "About Us", external: false },
-  { href: "/contact", label: "Contact", external: false },
-  { href: INSTAGRAM_URL, label: "Instagram", external: true },
+  { href: "/about", label: "About" },
+  { href: "/contact", label: "Contact" },
 ];
 
 const ACCOUNT_LINKS = [
-  { href: "/login", label: "Login" },
-  { href: "/register", label: "Register" },
+  { href: "/login", label: "Sign in" },
+  { href: "/register", label: "Create account" },
   { href: "/cart", label: "Cart" },
 ];
 
-const TRUST_BADGES = ["Hand-finished", "Small-batch runs", "Direct from workshop"];
-
-function FooterLinkList({
-  title,
-  links,
-}: {
-  title: string;
-  links: { href: string; label: string; external?: boolean }[];
-}) {
-  return (
-    <div>
-      <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-toros-tan">{title}</p>
-      <ul className="mt-3 space-y-2">
-        {links.map((link) => (
-          <li key={link.href}>
-            {link.external ? (
-              <a
-                href={link.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[11px] text-toros-steel transition-colors hover:text-toros-brass"
-              >
-                {link.label}
-              </a>
-            ) : (
-              <Link
-                href={link.href}
-                className="text-[11px] text-toros-steel transition-colors hover:text-toros-brass"
-              >
-                {link.label}
-              </Link>
-            )}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
+/**
+ * The closing composition.
+ *
+ * Only links that resolve and claims the repository can support. The previous
+ * footer carried "Privacy" and "Terms" as plain text because neither page
+ * exists, and a row of trust badges nothing here substantiates — both are gone
+ * rather than dressed up.
+ */
 export function Footer() {
   return (
-    <footer className="border-t border-toros-border bg-toros-black">
-      <MosaicDivider className="page-container pt-8" />
-
-      <div className="page-container py-10 sm:py-12">
-        <div className="grid gap-10 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,2fr)] lg:gap-14">
-          <div className="flex items-start gap-3">
-            <TorosLogo size="md" className="mt-0.5 shrink-0 opacity-90" />
-            <div className="min-w-0">
-              <Link
-                href="/"
-                className="font-display text-sm font-bold leading-snug tracking-[0.16em] text-toros-parchment sm:text-base"
-              >
-                TOROS KNIFE & TOOL
-              </Link>
-              <p className="mt-2 max-w-xs text-xs leading-relaxed text-toros-steel">
-                Hand-forged blades rooted in Turkish tradition — built for American field, camp, and
-                collection.
-              </p>
-              <div className="engraved-rule mt-5 w-full max-w-[12rem]" aria-hidden="true" />
-              <div className="mt-4 flex flex-wrap gap-2">
-                {TRUST_BADGES.map((badge) => (
-                  <span
-                    key={badge}
-                    className="rounded-sm border border-toros-border/80 px-2 py-1 text-[9px] font-bold uppercase tracking-[0.16em] text-toros-steel"
-                  >
-                    {badge}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
-            <FooterLinkList title="Products" links={PRODUCT_LINKS} />
-            <FooterLinkList title="Company" links={COMPANY_LINKS} />
-            <FooterLinkList title="Account" links={ACCOUNT_LINKS} />
-          </div>
-        </div>
-
-        <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-toros-border/50 pt-6 sm:flex-row">
-          <p className="text-[10px] text-toros-steel-dark">
-            © {new Date().getFullYear()} Toros Knife & Tool · All rights reserved
+    <footer className="site-footer">
+      <div className="page-container site-footer-inner">
+        <div className="footer-brand">
+          <TorosLogo size="md" className="footer-mark" />
+          <p className="footer-word">Toros Knife &amp; Tool</p>
+          <p className="t-meta footer-blurb">
+            A father-and-son workshop in Georgia, working Turkish steel and material for
+            American field use.
           </p>
-          <div className="flex gap-6 text-[10px] text-toros-steel-dark">
-            <Link href="/about" className="transition-colors hover:text-toros-brass">
-              About Us
-            </Link>
-            <Link href="/contact" className="transition-colors hover:text-toros-brass">
-              Contact
-            </Link>
-            <span>Privacy</span>
-            <span>Terms</span>
-          </div>
+          <a
+            href={INSTAGRAM_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="link footer-social"
+          >
+            @toros_knife on Instagram
+          </a>
         </div>
+
+        <div className="footer-links">
+          {[
+            { title: "Shop", links: SHOP_LINKS },
+            { title: "Company", links: COMPANY_LINKS },
+            { title: "Account", links: ACCOUNT_LINKS },
+          ].map((group) => (
+            <div key={group.title}>
+              <h2 className="footer-title">{group.title}</h2>
+              <ul className="footer-list">
+                {group.links.map((link) => (
+                  <li key={link.href}>
+                    <Link href={link.href} className="footer-link">
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="page-container footer-base">
+        <p>© {new Date().getFullYear()} Toros Knife &amp; Tool</p>
+        <p>Demo storefront — no payment is taken on this site.</p>
       </div>
     </footer>
   );

@@ -44,9 +44,15 @@ export function productMainImage(slug: string): string {
   return `${IMAGES_ROOT}/products/${slug}/main.jpg`;
 }
 
-/** Flat export path — public/images/products/{slug}.jpg */
-export function productFlatImage(slug: string): string {
-  return `${IMAGES_ROOT}/products/${slug}.jpg`;
+/**
+ * Card frame — public/images/products/{slug}/card.jpg
+ *
+ * Derived from `main.jpg` by `scripts/normalize-product-photos.py`: cropped to
+ * the photograph's real content box and filled to one 4:3 ratio, so uneven
+ * sources present identically in a grid. Nothing is stretched or invented.
+ */
+export function productCardImage(slug: string): string {
+  return `${IMAGES_ROOT}/products/${slug}/card.jpg`;
 }
 
 /** Gallery images — gallery-1.png, gallery-2.png, ... */

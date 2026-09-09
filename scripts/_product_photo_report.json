@@ -1,0 +1,236 @@
+{
+  "bos-deri": {
+    "content_box": [
+      0,
+      262,
+      900,
+      940
+    ],
+    "content_aspect": 1.327,
+    "trimmed_axis": "height",
+    "trim_fraction": 0.004,
+    "status": "filled",
+    "bytes": 382731
+  },
+  "bos-recurve-survivor": {
+    "content_box": [
+      0,
+      300,
+      900,
+      900
+    ],
+    "content_aspect": 1.5,
+    "trimmed_axis": "width",
+    "trim_fraction": 0.111,
+    "status": "filled",
+    "bytes": 332871
+  },
+  "bos-stag-frontier": {
+    "content_box": [
+      0,
+      262,
+      900,
+      937
+    ],
+    "content_aspect": 1.333,
+    "trimmed_axis": "height",
+    "trim_fraction": 0.0,
+    "status": "filled",
+    "bytes": 406237
+  },
+  "bos-stag-golden-horn": {
+    "content_box": [
+      0,
+      300,
+      900,
+      903
+    ],
+    "content_aspect": 1.493,
+    "trimmed_axis": "width",
+    "trim_fraction": 0.107,
+    "status": "filled",
+    "bytes": 375572
+  },
+  "bos-tera": {
+    "content_box": [
+      0,
+      258,
+      900,
+      943
+    ],
+    "content_aspect": 1.314,
+    "trimmed_axis": "height",
+    "trim_fraction": 0.015,
+    "status": "filled",
+    "bytes": 425716
+  },
+  "bos-zirve": {
+    "content_box": [
+      0,
+      262,
+      900,
+      937
+    ],
+    "content_aspect": 1.333,
+    "trimmed_axis": "height",
+    "trim_fraction": 0.0,
+    "status": "filled",
+    "bytes": 424239
+  },
+  "gur-mizrak": {
+    "content_box": [
+      0,
+      262,
+      900,
+      940
+    ],
+    "content_aspect": 1.327,
+    "trimmed_axis": "height",
+    "trim_fraction": 0.004,
+    "status": "filled",
+    "bytes": 433667
+  },
+  "gur-tombik": {
+    "content_box": [
+      0,
+      262,
+      900,
+      943
+    ],
+    "content_aspect": 1.322,
+    "trimmed_axis": "height",
+    "trim_fraction": 0.009,
+    "status": "filled",
+    "bytes": 391203
+  },
+  "gur-tuva": {
+    "content_box": [
+      0,
+      262,
+      900,
+      943
+    ],
+    "content_aspect": 1.322,
+    "trimmed_axis": "height",
+    "trim_fraction": 0.009,
+    "status": "filled",
+    "bytes": 405581
+  },
+  "kam-ram": {
+    "content_box": [
+      0,
+      300,
+      900,
+      903
+    ],
+    "content_aspect": 1.493,
+    "trimmed_axis": "width",
+    "trim_fraction": 0.107,
+    "status": "filled",
+    "bytes": 319016
+  },
+  "misty-rebar-shank": {
+    "content_box": [
+      0,
+      257,
+      900,
+      943
+    ],
+    "content_aspect": 1.312,
+    "trimmed_axis": "height",
+    "trim_fraction": 0.016,
+    "status": "filled",
+    "bytes": 417174
+  },
+  "misty-stubby-giraffe": {
+    "content_box": [
+      0,
+      300,
+      900,
+      903
+    ],
+    "content_aspect": 1.493,
+    "trimmed_axis": "width",
+    "trim_fraction": 0.107,
+    "status": "filled",
+    "bytes": 381455
+  },
+  "sakra-bear-claw-neck-knives": {
+    "content_box": [
+      44,
+      324,
+      856,
+      949
+    ],
+    "content_aspect": 1.299,
+    "trimmed_axis": "height",
+    "trim_fraction": 0.026,
+    "status": "filled",
+    "bytes": 215530
+  },
+  "toros-ceviz": {
+    "content_box": [
+      44,
+      268,
+      856,
+      1011
+    ],
+    "content_aspect": 1.093,
+    "trimmed_axis": "height",
+    "trim_fraction": 0.18,
+    "status": "filled",
+    "bytes": 228543
+  },
+  "toros-jellybean": {
+    "content_box": [
+      0,
+      300,
+      900,
+      900
+    ],
+    "content_aspect": 1.5,
+    "trimmed_axis": "width",
+    "trim_fraction": 0.111,
+    "status": "filled",
+    "bytes": 290210
+  },
+  "toros-ram-horn": {
+    "content_box": [
+      44,
+      436,
+      856,
+      830
+    ],
+    "content_aspect": 2.061,
+    "trimmed_axis": "width",
+    "trim_fraction": 0.353,
+    "status": "letterboxed",
+    "bytes": 84616
+  },
+  "toros-rhino": {
+    "content_box": [
+      44,
+      269,
+      856,
+      1010
+    ],
+    "content_aspect": 1.096,
+    "trimmed_axis": "height",
+    "trim_fraction": 0.178,
+    "status": "filled",
+    "bytes": 235503
+  },
+  "toros-shepherd-knife": {
+    "content_box": [
+      44,
+      269,
+      856,
+      1010
+    ],
+    "content_aspect": 1.096,
+    "trimmed_axis": "height",
+    "trim_fraction": 0.178,
+    "status": "filled",
+    "bytes": 228918
+  }
+}

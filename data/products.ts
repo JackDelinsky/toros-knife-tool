@@ -1,4 +1,4 @@
-import { BRAND_IMAGE_PATHS, productFlatImage } from "@/lib/image-paths";
+import { BRAND_IMAGE_PATHS, productMainImage } from "@/lib/image-paths";
 import type { Product } from "@/types/product";
 
 /** Defaults applied to every product until checkout URLs are wired */
@@ -8,7 +8,7 @@ function withDefaults(
 ): Product {
   const slug = product.slug;
   return {
-    images: [productFlatImage(slug)],
+    images: [productMainImage(slug)],
     spinImages: [],
     customAvailable: false,
     checkoutUrl: "",

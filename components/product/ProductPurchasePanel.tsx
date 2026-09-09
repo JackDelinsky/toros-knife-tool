@@ -11,33 +11,29 @@ interface ProductPurchasePanelProps {
 export function ProductPurchasePanel({ product }: ProductPurchasePanelProps) {
   const [quantity, setQuantity] = useState(1);
 
-  function decrement() {
-    setQuantity((q) => Math.max(1, q - 1));
-  }
-
-  function increment() {
-    setQuantity((q) => Math.min(10, q + 1));
-  }
-
   return (
-    <div className="product-purchase">
-      <div className="product-quantity" aria-label="Quantity">
-        <span className="product-quantity-label">Qty</span>
-        <div className="product-quantity-control">
+    <div className="buy-purchase">
+      <div className="qty">
+        <span className="qty-label" id="qty-label">
+          Quantity
+        </span>
+        <div className="qty-control" role="group" aria-labelledby="qty-label">
           <button
             type="button"
-            className="product-quantity-btn"
-            onClick={decrement}
+            className="qty-btn"
+            onClick={() => setQuantity((q) => Math.max(1, q - 1))}
             disabled={!product.inStock || quantity <= 1}
             aria-label="Decrease quantity"
           >
             −
           </button>
-          <span className="product-quantity-value" aria-live="polite">{quantity}</span>
+          <span className="qty-value" aria-live="polite">
+            {quantity}
+          </span>
           <button
             type="button"
-            className="product-quantity-btn"
-            onClick={increment}
+            className="qty-btn"
+            onClick={() => setQuantity((q) => Math.min(10, q + 1))}
             disabled={!product.inStock || quantity >= 10}
             aria-label="Increase quantity"
           >
@@ -46,13 +42,7 @@ export function ProductPurchasePanel({ product }: ProductPurchasePanelProps) {
         </div>
       </div>
 
-      <AddToCartButton product={product} quantity={quantity} className="product-add-btn" />
-
-      {!product.checkoutUrl && (
-        <p className="product-checkout-note">
-          Checkout integration coming in a future phase.
-        </p>
-      )}
+      <AddToCartButton product={product} quantity={quantity} />
     </div>
   );
 }
