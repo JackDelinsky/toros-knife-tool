@@ -3242,12 +3242,27 @@ body::after {
 .cat-rail {
   --rail-duration: 42s;
   position: relative;
-  margin-top: var(--space-xl);
+  /* A window four cards wide, centred: 74rem holds 4 x (17rem card + 0.75rem
+     gap) with a little to spare. The categories travel through that window
+     rather than spanning the whole viewport, so there is one place to look and
+     never more than four families in view at once. */
+  width: min(100%, 74rem);
+  margin: var(--space-xl) auto 0;
   overflow: hidden;
-  /* Items enter and leave rather than being cut off at the edge. Kept tight —
-     a wider fade reaches past the card's edge and dims its text. */
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 3.5%, #000 96.5%, transparent);
-  mask-image: linear-gradient(90deg, transparent, #000 3.5%, #000 96.5%, transparent);
+  /* The outermost of those four dissolve rather than being cut off, so cards
+     arrive and leave instead of appearing at a hard edge. The fade is kept to
+     the outer ~9% so the middle still shows whole, readable cards. */
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 9%, #000 91%, transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0%, #000 9%, #000 91%, transparent 100%);
+}
+
+/* Narrow screens only ever show one card at a time, so a wide fade would
+   ghost the only thing there is to read. Tighten it. */
+@media (max-width: 767px) {
+  .cat-rail {
+    -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 6%, #000 94%, transparent 100%);
+    mask-image: linear-gradient(90deg, transparent 0%, #000 6%, #000 94%, transparent 100%);
+  }
 }
 
 .cat-track {
@@ -3279,8 +3294,9 @@ body::after {
   flex-direction: column;
   align-items: flex-start;
   gap: 0.5rem;
-  width: clamp(15rem, 22vw, 19rem);
-  min-height: 11rem;
+  /* Sized so four of these plus their gaps fit the rail window above. */
+  width: clamp(14rem, 20vw, 17rem);
+  min-height: 11.5rem;
   padding: var(--space-md);
   border: var(--line);
   border-radius: var(--radius-sm);
@@ -3387,4 +3403,18 @@ body::after {
 
 @media (min-width: 640px) {
   .footer-links { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+/* --- Homepage shop band --------------------------------------------------
+   The catalogue, on the homepage, below the category rail. It reuses the
+   .catalog-* grid and bar wholesale; all this wrapper does is give the
+   section its own ground and a rule to separate it from the rail above.
+   Opaque, because like the rail it slides over the sticky hero. */
+
+.shopband {
+  position: relative;
+  z-index: 1;
+  background: var(--toros-black);
+  border-top: var(--line-faint);
+  padding-block: var(--space-2xl);
 }
