@@ -8,7 +8,6 @@ import { motion } from "framer-motion";
 import type { HeroKnife } from "@/components/home/hero/hero-knives";
 import { formatPrice } from "@/lib/products";
 import { CATEGORY_LABELS } from "@/types/product";
-import { TorosMountainMark } from "@/components/home/hero/TorosMountainMark";
 
 interface KnifeInspectionDialogProps {
   knife: HeroKnife;
@@ -22,9 +21,13 @@ const FOCUSABLE =
   'a[href], button:not([disabled]), input, [tabindex]:not([tabindex="-1"])';
 
 /**
- * Closer look at the active knife. Deliberately not a white modal: it keeps the
- * product's own environment dimmed at the edges so it reads as moving forward
- * within the same scene.
+ * The closer look.
+ *
+ * Not a modal on a black panel. The knife's own scene layers are re-rendered
+ * behind it at a larger scale, so stepping in reads as moving *into* the world
+ * the knife was already standing in — the light, the ground and the foreground
+ * are the same ones, just nearer. The product itself animates from its carousel
+ * position via a shared `layoutId`.
  */
 export function KnifeInspectionDialog({
   knife,
@@ -82,109 +85,127 @@ export function KnifeInspectionDialog({
     { label: "Overall", value: product.totalLength },
   ].filter((row) => row.value && row.value !== "N/A");
 
+  const fade = {
+    initial: { opacity: 0 },
+    animate: { opacity: 1 },
+    exit: { opacity: 0 },
+    transition: { duration: reducedMotion ? 0.16 : 0.5, ease: [0.22, 1, 0.36, 1] as const },
+  };
+
   // Only ever rendered in response to a click, so there is no server pass to
   // guard against beyond this belt-and-braces check.
   if (typeof document === "undefined") return null;
 
   return createPortal(
-    <div className="hero-inspect" role="presentation">
+    <div
+      className="inspect"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="inspect-title"
+      style={
+        {
+          "--knife-accent": presentation.accent,
+          "--knife-accent-secondary": presentation.accentSecondary,
+          "--key-x": `${50 + presentation.scene.keyX * 34}%`,
+          "--key-y": `${50 - presentation.scene.keyY * 30}%`,
+          "--key-strength": presentation.scene.keyStrength,
+        } as React.CSSProperties
+      }
+    >
+      {/* The same world, moved closer. */}
+      <motion.div className="inspect-scene" {...fade} aria-hidden="true">
+        <Image src={presentation.scene.plate} alt="" fill sizes="100vw" className="inspect-scene-img" />
+        <div className="inspect-scene-mid">
+          <Image src={presentation.scene.mid} alt="" fill sizes="100vw" className="inspect-scene-img" />
+        </div>
+        <div className="inspect-scene-key" />
+      </motion.div>
+
+      {/* Clicking anywhere off the content closes; the button exists so the
+          gesture is real to assistive tech rather than a bare div handler. */}
       <motion.button
         type="button"
-        className="hero-inspect-scrim"
+        className="inspect-dismiss"
         onClick={onClose}
         aria-label="Close closer look"
         tabIndex={-1}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: reducedMotion ? 0.15 : 0.35 }}
+        {...fade}
       />
 
       <motion.div
         ref={panelRef}
-        className="hero-inspect-panel"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="hero-inspect-title"
-        style={
-          {
-            "--knife-accent": presentation.accent,
-            "--knife-accent-secondary": presentation.accentSecondary,
-          } as React.CSSProperties
-        }
-        initial={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.96 }}
-        animate={reducedMotion ? { opacity: 1 } : { opacity: 1, scale: 1 }}
-        exit={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.97 }}
+        className="inspect-body"
+        initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 16 }}
         transition={
-          reducedMotion
-            ? { duration: 0.18 }
-            : { type: "spring", stiffness: 220, damping: 28 }
+          reducedMotion ? { duration: 0.18 } : { type: "spring", stiffness: 200, damping: 30 }
         }
       >
-        <button
-          ref={closeRef}
-          type="button"
-          className="hero-inspect-close"
-          onClick={onClose}
-        >
-          <span aria-hidden="true">✕</span>
+        <button ref={closeRef} type="button" className="inspect-close" onClick={onClose}>
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
           <span className="sr-only">Close closer look</span>
         </button>
 
-        <div className="hero-inspect-stage">
-          <motion.div layoutId={reducedMotion ? undefined : `hero-knife-${product.slug}`}>
+        <div className="inspect-stage">
+          <motion.div
+            className="inspect-knife-wrap"
+            layoutId={reducedMotion ? undefined : `hero-knife-${product.slug}`}
+            style={{ rotate: presentation.imageRotation, scale: presentation.imageScale }}
+          >
             <Image
               src={presentation.cutoutSrc}
-              alt={`${product.name} — ${product.steel} blade with ${product.handleMaterial} handle`}
+              alt={`${product.name}: ${product.steel} blade with a ${product.handleMaterial} handle`}
               width={presentation.cutoutWidth}
               height={presentation.cutoutHeight}
-              className="hero-inspect-image"
-              sizes="(max-width: 900px) 80vw, 40vw"
+              className="inspect-knife"
+              sizes="(max-width: 900px) 92vw, 52vw"
             />
           </motion.div>
         </div>
 
-        <div className="hero-inspect-detail">
+        <div className="inspect-detail">
           <p className="eyebrow">{CATEGORY_LABELS[product.category]}</p>
-          <h2 id="hero-inspect-title" className="hero-inspect-title">
+          <h2 id="inspect-title" className="t-h2 inspect-title">
             {product.name}
           </h2>
 
-          <p className="hero-inspect-copy">{product.longDescription}</p>
+          <p className="t-body inspect-copy">{product.longDescription}</p>
 
-          <dl className="hero-inspect-specs">
+          <dl className="inspect-specs">
             {specs.map((row) => (
-              <div key={row.label} className="hero-inspect-spec">
+              <div key={row.label} className="inspect-spec">
                 <dt>{row.label}</dt>
                 <dd>{row.value}</dd>
               </div>
             ))}
           </dl>
 
-          <div className="hero-inspect-meta">
-            <span className="hero-inspect-price">{formatPrice(product.price)}</span>
-            <span className={product.inStock ? "hero-stock" : "hero-stock hero-stock--out"}>
+          <div className="inspect-meta">
+            <span className="t-price">{formatPrice(product.price)}</span>
+            <span className={product.inStock ? "inspect-stock" : "inspect-stock inspect-stock--out"}>
               {product.inStock ? "In stock" : "Sold out"}
             </span>
           </div>
 
-          <div className="hero-inspect-actions">
+          <div className="inspect-actions">
             <button
               type="button"
-              className="hero-btn hero-btn--primary"
+              className="btn btn--primary"
               onClick={onAddToCart}
               disabled={!product.inStock}
             >
-              {addState === "added" ? "Added to demo cart" : "Add to Cart"}
+              {addState === "added" ? "Added to cart" : "Add to cart"}
             </button>
-            <Link href={`/products/${product.slug}`} className="hero-btn hero-btn--ghost">
-              Full product page →
+            <Link href={`/products/${product.slug}`} className="btn btn--secondary">
+              View full product
             </Link>
           </div>
 
-          <p className="hero-demo-note">
-            <TorosMountainMark className="hero-demo-mark" />
-            Demo storefront — this cart is local to your browser and takes no payment.
+          <p className="inspect-note">
+            Demo storefront — the cart lives in your browser and takes no payment.
           </p>
         </div>
       </motion.div>

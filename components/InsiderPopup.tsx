@@ -2,37 +2,51 @@
 
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { MosaicDivider } from "@/components/ui/GeometricAccents";
 import { TorosLogo } from "@/components/ui/TorosLogo";
 
 const SESSION_KEY = "toros-insider-dismissed";
 
 /**
- * Immersive routes where a timed popup would interrupt the experience: the
- * homepage opens on the fullscreen knife carousel, and /craftsmanship is a
- * scroll-driven reveal. "/" is matched exactly — prefix-matching it would
- * suppress the popup on every route on the site.
+ * Scroll depth at which someone has clearly chosen to keep reading. Asking for
+ * an email before that is asking a stranger.
  */
-const SUPPRESSED_EXACT = ["/"];
-const SUPPRESSED_PREFIXES = ["/craftsmanship"];
+const SCROLL_TRIGGER = 0.55;
 
+/** The homepage opens on the fullscreen carousel; nothing covers that. */
+const SUPPRESSED_EXACT = ["/"];
+
+/**
+ * Newsletter invitation.
+ *
+ * It is deliberately *not* on a timer. A popup that lands 1.5s after entry
+ * interrupts the page before the visitor has seen anything, which is the
+ * single most disliked pattern on a storefront. This one waits until the
+ * visitor has read more than half a page — a deliberate signal of interest —
+ * and then only once per session.
+ */
 export function InsiderPopup() {
   const pathname = usePathname();
   const [visible, setVisible] = useState(false);
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
-  const suppressed =
-    SUPPRESSED_EXACT.includes(pathname ?? "") ||
-    SUPPRESSED_PREFIXES.some((path) => pathname?.startsWith(path));
+  const suppressed = SUPPRESSED_EXACT.includes(pathname ?? "");
 
   useEffect(() => {
     if (suppressed || sessionStorage.getItem(SESSION_KEY)) return;
 
-    const timer = setTimeout(() => {
-      setVisible(true);
-    }, 1500);
+    function onScroll() {
+      const scrollable = document.documentElement.scrollHeight - window.innerHeight;
+      // A page too short to scroll can't express interest this way, so it
+      // simply never asks.
+      if (scrollable < 400) return;
+      if (window.scrollY / scrollable >= SCROLL_TRIGGER) {
+        setVisible(true);
+        window.removeEventListener("scroll", onScroll);
+      }
+    }
 
-    return () => clearTimeout(timer);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, [suppressed]);
 
   function dismiss() {
@@ -42,87 +56,55 @@ export function InsiderPopup() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (email.trim()) {
-      setSubmitted(true);
-      sessionStorage.setItem(SESSION_KEY, "1");
-      setTimeout(() => setVisible(false), 2000);
-    }
+    if (!email.trim()) return;
+    setSubmitted(true);
+    sessionStorage.setItem(SESSION_KEY, "1");
+    setTimeout(() => setVisible(false), 2200);
   }
 
   if (!visible) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-end justify-center p-4 sm:items-center sm:p-6">
-      <button
-        type="button"
-        className="absolute inset-0 bg-toros-black/75 backdrop-blur-sm"
-        onClick={dismiss}
-        aria-label="Close popup"
-      />
+    <div className="insider" role="dialog" aria-modal="true" aria-labelledby="insider-title">
+      <button type="button" className="insider-scrim" onClick={dismiss} aria-label="Close" />
 
-      <div
-        className="relative w-full max-w-md overflow-hidden rounded-sm border border-toros-brass/30 bg-toros-charcoal shadow-[0_24px_80px_rgba(0,0,0,0.7),0_0_40px_rgba(168,137,74,0.12)] popup-enter"
-        role="dialog"
-        aria-labelledby="insider-title"
-        aria-modal="true"
-      >
-        <div className="pointer-events-none absolute inset-0 pattern-mosaic opacity-20" />
-
-        <button
-          type="button"
-          onClick={dismiss}
-          className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-sm text-toros-sand/60 transition-colors hover:bg-toros-surface hover:text-toros-parchment"
-          aria-label="Close"
-        >
+      <div className="insider-panel">
+        <button type="button" onClick={dismiss} className="insider-close" aria-label="Close">
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
 
-        <div className="relative border-b border-toros-brass/20 bg-toros-oxblood/20 px-6 py-5">
-          <TorosLogo size="md" />
-          <h2
-            id="insider-title"
-            className="mt-3 font-display text-2xl font-bold text-toros-parchment"
-          >
-            Join the Toros Insider List
-          </h2>
-          <p className="mt-2 text-sm leading-relaxed text-toros-sand/80">
-            Enter for giveaways, limited drops, and first access to new blades.
-          </p>
-        </div>
+        <TorosLogo size="sm" />
+        <h2 id="insider-title" className="t-h3 mt-4">
+          Hear about the next run first
+        </h2>
+        <p className="t-meta mt-2">
+          Small batches sell out quietly. We&apos;ll write when there is something new on the
+          bench — not otherwise.
+        </p>
 
-        <div className="relative px-6 py-5">
-          <MosaicDivider className="mb-5" />
-
-          {submitted ? (
-            <div className="rounded-sm border border-toros-brass/30 bg-toros-brass/10 px-4 py-4 text-center">
-              <p className="font-semibold text-toros-brass-light">You&apos;re on the list.</p>
-              <p className="mt-1 text-xs text-toros-sand/70">Good luck in upcoming giveaways.</p>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-3">
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Email address"
-                required
-                className="w-full rounded-sm border border-toros-border bg-toros-surface px-4 py-3 text-sm text-toros-parchment placeholder:text-toros-steel focus:border-toros-brass/50 focus:outline-none focus:ring-1 focus:ring-toros-brass/30"
-              />
-              <button
-                type="submit"
-                className="w-full rounded-sm bg-toros-brass px-4 py-3 text-sm font-bold uppercase tracking-wider text-toros-black transition-colors hover:bg-toros-brass-light"
-              >
-                Join & Enter
-              </button>
-            </form>
-          )}
-
-          <p className="mt-4 text-center text-[10px] text-toros-steel">
-            Family-owned. No spam, ever.
-          </p>
-        </div>
+        {submitted ? (
+          <p className="insider-success">You&apos;re on the list.</p>
+        ) : (
+          <form onSubmit={handleSubmit} className="insider-form">
+            <label htmlFor="insider-email" className="sr-only">
+              Email address
+            </label>
+            <input
+              id="insider-email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email address"
+              required
+              className="field"
+            />
+            <button type="submit" className="btn btn--primary">
+              Join
+            </button>
+          </form>
+        )}
       </div>
     </div>
   );

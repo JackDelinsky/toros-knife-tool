@@ -12,7 +12,7 @@ export function ProductStorySection({ story, longDescription }: ProductStorySect
   return (
     <section className="product-story" aria-labelledby="product-story-heading">
       <h2 id="product-story-heading" className="product-section-heading">
-        Craftsmanship
+        The Making
       </h2>
       <p className="product-story-lead">{story}</p>
       {showDetail && <p className="product-story-detail">{longDescription}</p>}

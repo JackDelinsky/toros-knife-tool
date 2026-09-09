@@ -193,7 +193,6 @@ export function Header() {
             />
 
             <Link href="/about" className={NAV_LINK_CLASS}>About Us</Link>
-            <Link href="/craftsmanship" className={NAV_LINK_CLASS}>Craftsmanship</Link>
             <Link href="/contact" className={NAV_LINK_CLASS}>Contact Us</Link>
 
             <HeaderNavDropdown
@@ -268,13 +267,6 @@ export function Header() {
                 onClick={closeMobileMenu}
               >
                 About Us
-              </Link>
-              <Link
-                href="/craftsmanship"
-                className="rounded-sm px-3 py-2.5 text-sm font-medium text-toros-sand hover:bg-toros-surface hover:text-toros-brass"
-                onClick={closeMobileMenu}
-              >
-                Craftsmanship
               </Link>
               <Link
                 href="/contact"

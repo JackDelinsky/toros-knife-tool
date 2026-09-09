@@ -5,13 +5,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion, type PanInfo } from "framer-motion";
 import type { HeroKnife } from "@/components/home/hero/hero-knives";
-import { KnifeEnvironment } from "@/components/home/hero/KnifeEnvironment";
+import { KnifeScene, KnifeSceneForeground } from "@/components/home/hero/KnifeScene";
 import { KnifeInspectionDialog } from "@/components/home/hero/KnifeInspectionDialog";
-import { TorosMountainMark } from "@/components/home/hero/TorosMountainMark";
 import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion";
 import { demoCartAdapter } from "@/lib/demo-cart";
 import { formatPrice } from "@/lib/products";
-import { CATEGORY_LABELS } from "@/types/product";
 
 interface FeaturedKnifeHeroProps {
   knives: HeroKnife[];
@@ -31,10 +29,36 @@ function relativeOffset(index: number, active: number, length: number): number {
   return cycle(index - active + half, length) - half;
 }
 
-const STEP_LOCK_MS = 320;
+/**
+ * Where a slide sits for a given offset from centre.
+ *
+ * Used for both `initial` and `animate` so the very first paint — server HTML
+ * included — already has final coordinates. Without this the seven knives
+ * render stacked at the centre for a frame before the carousel settles.
+ */
+function slidePose(offset: number, flat: boolean) {
+  const isActive = offset === 0;
+  const isNeighbour = Math.abs(offset) === 1;
+  return {
+    x: `${offset * 58}%`,
+    scale: isActive ? 1 : 0.54,
+    // Neighbours stay recognisable rather than being crushed to silhouettes,
+    // but far enough out that they never sit under the copy or the price.
+    opacity: isActive ? 1 : isNeighbour ? 0.46 : 0,
+    filter: isActive
+      ? "blur(0px) brightness(1) saturate(1)"
+      : "blur(2.5px) brightness(0.74) saturate(0.7)",
+    rotateY: flat ? 0 : offset * -11,
+    zIndex: isActive ? 3 : 2 - Math.abs(offset),
+  };
+}
+
+const STEP_LOCK_MS = 340;
 const DRAG_DISTANCE = 70;
 const DRAG_VELOCITY = 320;
 const TAP_SLOP = 6;
+/** Slides kept mounted either side of centre: one visible, one warming up. */
+const MOUNT_RADIUS = 2;
 
 export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
   const reducedMotion = usePrefersReducedMotion();
@@ -55,7 +79,7 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
   const { presentation, product } = knife;
 
   // Rapid clicks and flicks are absorbed rather than queued, so the knife,
-  // backdrop, copy and index can never drift out of step with each other.
+  // scene, copy and index can never drift out of step with each other.
   const step = useCallback(
     (delta: 1 | -1) => {
       const now = Date.now();
@@ -113,15 +137,15 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
       unitPrice: product.price,
       quantity: 1,
     });
-    setCartCount(demoCartAdapter.count(next));  // read back only after a write
+    setCartCount(demoCartAdapter.count(next)); // read back only after a write
     setAddState("added");
   }, [product]);
 
-  const specs = useMemo(
+  // Two facts, not a spec sheet. The full table lives on the product page.
+  const facts = useMemo(
     () =>
       [
         { label: "Steel", value: product.steel },
-        { label: "Handle", value: product.handleMaterial },
         { label: "Overall", value: product.totalLength },
       ].filter((row) => row.value && row.value !== "N/A"),
     [product],
@@ -131,9 +155,16 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
     ? { duration: 0.2 }
     : { type: "spring" as const, stiffness: 120, damping: 22, mass: 0.9 };
 
+  const copyMotion = {
+    initial: reducedMotion ? { opacity: 0 } : { opacity: 0, y: 14 },
+    animate: { opacity: 1, y: 0 },
+    exit: reducedMotion ? { opacity: 0 } : { opacity: 0, y: -10 },
+    transition: { duration: reducedMotion ? 0.18 : 0.42, ease: [0.22, 1, 0.36, 1] as const },
+  };
+
   return (
     <section
-      className="hero-cinematic"
+      className="hero"
       aria-roledescription="carousel"
       aria-label="Featured Toros knives"
       onKeyDown={handleKeyDown}
@@ -145,27 +176,24 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
         } as React.CSSProperties
       }
     >
-      <AnimatePresence mode="sync">
-        <KnifeEnvironment presentation={presentation} reducedMotion={reducedMotion} />
+      <AnimatePresence initial={false} mode="sync">
+        <KnifeScene
+          key={presentation.slug}
+          presentation={presentation}
+          reducedMotion={reducedMotion}
+          direction={direction}
+          eager={active === 0}
+        />
       </AnimatePresence>
 
-      <div className="hero-cinematic-inner">
-        {/* Left column — story */}
+      <div className="hero-grid">
+        {/* Left — the cinematic line */}
         <div className="hero-col hero-col--story">
           <AnimatePresence mode="wait">
-            <motion.div
-              key={`story-${product.slug}`}
-              initial={reducedMotion ? { opacity: 0 } : { opacity: 0, x: direction * 26 }}
-              animate={reducedMotion ? { opacity: 1 } : { opacity: 1, x: 0 }}
-              exit={reducedMotion ? { opacity: 0 } : { opacity: 0, x: direction * -26 }}
-              transition={{ duration: reducedMotion ? 0.18 : 0.45, ease: "easeOut" }}
-            >
+            <motion.div key={`story-${product.slug}`} {...copyMotion}>
               <p className="eyebrow">{presentation.eyebrow}</p>
-              <h1 className="hero-cinematic-title">{product.name}</h1>
-              <p className="hero-cinematic-copy">{presentation.heroCopy}</p>
-              <Link href={`/products/${product.slug}`} className="hero-inline-link">
-                View full details →
-              </Link>
+              <h1 className="hero-title">{product.name}</h1>
+              <p className="hero-line">{presentation.heroCopy}</p>
             </motion.div>
           </AnimatePresence>
         </div>
@@ -184,24 +212,41 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
           {knives.map((entry, index) => {
             const offset = relativeOffset(index, active, length);
             const isActive = offset === 0;
-            const isNeighbour = Math.abs(offset) === 1;
-            const visible = Math.abs(offset) <= 1;
+            const pose = slidePose(offset, reducedMotion);
+
+            // Far slides stay unmounted; one beyond the visible neighbours is
+            // kept so the next cutout is already decoded when it steps in.
+            if (Math.abs(offset) > MOUNT_RADIUS) return null;
+
+            const image = (
+              <Image
+                src={entry.presentation.cutoutSrc}
+                alt={
+                  isActive
+                    ? `${entry.product.name}: ${entry.product.steel} blade with a ${entry.product.handleMaterial} handle`
+                    : ""
+                }
+                width={entry.presentation.cutoutWidth}
+                height={entry.presentation.cutoutHeight}
+                className="hero-knife-img"
+                /* The active knife is the LCP element. `preload` is not used
+                   here: a slide's index is fixed but its offset is not, so a
+                   preloaded slide would end up `loading="lazy"` after one step
+                   and Next rejects that pair. Eager loading plus a high fetch
+                   priority is the documented equivalent for this case. */
+                loading={Math.abs(offset) <= 1 ? "eager" : "lazy"}
+                fetchPriority={isActive ? "high" : "auto"}
+                sizes="(max-width: 900px) 76vw, 42vw"
+              />
+            );
 
             return (
               <motion.div
                 key={entry.product.slug}
                 className="hero-slide"
-                data-role={isActive ? "active" : isNeighbour ? "neighbour" : "hidden"}
-                animate={{
-                  x: `${offset * 52}%`,
-                  scale: isActive ? 1 : 0.62,
-                  opacity: isActive ? 1 : isNeighbour ? 0.34 : 0,
-                  filter: isActive
-                    ? "blur(0px) brightness(1) saturate(1)"
-                    : "blur(3px) brightness(0.62) saturate(0.55)",
-                  rotateY: reducedMotion ? 0 : offset * -12,
-                  zIndex: isActive ? 3 : 2 - Math.abs(offset),
-                }}
+                data-role={isActive ? "active" : "neighbour"}
+                initial={pose}
+                animate={pose}
                 transition={spring}
                 aria-hidden={!isActive}
               >
@@ -209,50 +254,34 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
                   <button
                     ref={inspectTrigger}
                     type="button"
-                    className="hero-slide-button"
-                    style={{ pointerEvents: visible ? "auto" : "none" }}
+                    className="hero-slide-button hero-slide-button--active"
                     onClick={openInspection}
                     aria-label={`Take a closer look at ${entry.product.name}`}
                   >
                     <motion.div
+                      className="hero-knife-wrap"
                       layoutId={reducedMotion ? undefined : `hero-knife-${entry.product.slug}`}
                       style={{
                         rotate: entry.presentation.imageRotation,
                         scale: entry.presentation.imageScale,
                       }}
                     >
-                      <Image
-                        src={entry.presentation.cutoutSrc}
-                        alt={`${entry.product.name} — ${entry.product.steel} blade with ${entry.product.handleMaterial} handle`}
-                        width={entry.presentation.cutoutWidth}
-                        height={entry.presentation.cutoutHeight}
-                        className="hero-knife-img"
-                        preload={index === 0}
-                        loading={index === 0 ? "eager" : "lazy"}
-                        sizes="(max-width: 900px) 70vw, 38vw"
-                      />
+                      {image}
                     </motion.div>
+                    <span className="hero-focus-hint" aria-hidden="true">
+                      Press Enter for a closer look
+                    </span>
                   </button>
                 ) : (
-                  <div
-                    className="hero-slide-button hero-slide-button--preview"
-                    aria-hidden="true"
-                  >
+                  <div className="hero-slide-button" aria-hidden="true">
                     <div
+                      className="hero-knife-wrap"
                       style={{
                         rotate: `${entry.presentation.imageRotation}deg`,
                         scale: entry.presentation.imageScale,
                       }}
                     >
-                      <Image
-                        src={entry.presentation.cutoutSrc}
-                        alt=""
-                        width={entry.presentation.cutoutWidth}
-                        height={entry.presentation.cutoutHeight}
-                        className="hero-knife-img"
-                        loading="lazy"
-                        sizes="24vw"
-                      />
+                      {image}
                     </div>
                   </div>
                 )}
@@ -260,6 +289,9 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
             );
           })}
 
+          {/* Deterministic navigation targets over the outer thirds. The active
+              cutout is a transparent PNG whose box is far wider than the knife,
+              so hit-testing must not depend on it. */}
           <button
             type="button"
             className="hero-side-zone hero-side-zone--prev"
@@ -273,68 +305,85 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
             aria-label={`Show ${knives[cycle(active + 1, length)].product.name}`}
           />
 
-          <div className="hero-stage-shadow" aria-hidden="true" />
+          <div className="hero-contact-shadow" aria-hidden="true" />
         </motion.div>
 
-        {/* Right column — commerce */}
+        {/* Right — price, two facts, the actions */}
         <div className="hero-col hero-col--buy">
           <AnimatePresence mode="wait">
-            <motion.div
-              key={`buy-${product.slug}`}
-              initial={reducedMotion ? { opacity: 0 } : { opacity: 0, x: direction * 26 }}
-              animate={reducedMotion ? { opacity: 1 } : { opacity: 1, x: 0 }}
-              exit={reducedMotion ? { opacity: 0 } : { opacity: 0, x: direction * -26 }}
-              transition={{ duration: reducedMotion ? 0.18 : 0.45, ease: "easeOut" }}
-            >
-              <p className="hero-category">{CATEGORY_LABELS[product.category]}</p>
-              <p className="hero-price">{formatPrice(product.price)}</p>
+            <motion.div key={`buy-${product.slug}`} {...copyMotion}>
+              <p className="t-price hero-price">{formatPrice(product.price)}</p>
 
-              <dl className="hero-specs">
-                {specs.map((row) => (
-                  <div key={row.label} className="hero-spec">
+              <dl className="hero-facts">
+                {facts.map((row) => (
+                  <div key={row.label} className="hero-fact">
                     <dt>{row.label}</dt>
                     <dd>{row.value}</dd>
                   </div>
                 ))}
               </dl>
 
-              <p className={product.inStock ? "hero-stock" : "hero-stock hero-stock--out"}>
-                {product.inStock ? "In stock" : "Sold out"}
-              </p>
+              {!product.inStock ? <p className="hero-sold">Sold out</p> : null}
 
               <div className="hero-actions">
-                <button type="button" className="hero-btn hero-btn--primary" onClick={openInspection}>
-                  Inspect Knife
+                <button type="button" className="btn btn--primary" onClick={openInspection}>
+                  Take a closer look
                 </button>
                 <button
                   type="button"
-                  className="hero-btn hero-btn--secondary"
+                  className="btn btn--secondary"
                   onClick={addToCart}
                   disabled={!product.inStock}
                 >
-                  {addState === "added" ? "Added ✓" : "Add to Cart"}
+                  {addState === "added" ? "Added" : "Add to cart"}
                 </button>
               </div>
+
+              <Link href={`/products/${product.slug}`} className="link hero-full-link">
+                Full details
+              </Link>
             </motion.div>
           </AnimatePresence>
         </div>
       </div>
 
-      {/* Controls */}
+      {/* Near layer — above the knife, so it genuinely overlaps it. */}
+      <AnimatePresence initial={false} mode="sync">
+        <KnifeSceneForeground
+          key={`fore-${presentation.slug}`}
+          presentation={presentation}
+          reducedMotion={reducedMotion}
+          direction={direction}
+        />
+      </AnimatePresence>
+
       <div className="hero-controls">
-        <button type="button" className="hero-arrow" onClick={() => step(-1)} aria-label="Previous knife">
-          ←
+        <button
+          type="button"
+          className="btn btn--icon hero-arrow"
+          onClick={() => step(-1)}
+          aria-label="Previous knife"
+        >
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M15 5l-7 7 7 7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
         </button>
 
         <p className="hero-index">
-          <TorosMountainMark className="hero-index-mark" />
           <span className="hero-index-current">{String(active + 1).padStart(2, "0")}</span>
-          <span className="hero-index-sep">/</span>
-          <span className="hero-index-total">{String(length).padStart(2, "0")}</span>
+          <span className="hero-index-rule" aria-hidden="true" />
+          <span>{String(length).padStart(2, "0")}</span>
         </p>
 
-        <button type="button" className="hero-arrow" onClick={() => step(1)} aria-label="Next knife">
-          →
+        <button
+          type="button"
+          className="btn btn--icon hero-arrow"
+          onClick={() => step(1)}
+          aria-label="Next knife"
+        >
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M9 5l7 7-7 7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
         </button>
       </div>
 
