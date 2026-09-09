@@ -3111,3 +3111,102 @@ body::after {
 }
 .bag-action { margin-top: var(--space-sm); max-width: 20rem; }
 .bag-note { margin-top: var(--space-xs); }
+
+/* ==========================================================================
+   Responsive corrections
+   ========================================================================== */
+
+/* On a phone the hero box is taller than it is wide, so `cover` crops a 16:9
+   scene down to a narrow vertical slice through its middle — the horizon, the
+   terrain and most of the light end up outside the frame, and the knife looks
+   like it is floating on black. The middle ground is instead laid across the
+   bottom in full, which is where a horizon belongs anyway. */
+@media (max-width: 899px) {
+  .hero-scene-layer--plate .hero-scene-img { object-position: 50% 64%; }
+
+  .hero-scene-layer--mid {
+    inset: auto 0 0 0;
+    height: 46%;
+  }
+  .hero-scene-layer--mid .hero-scene-img {
+    object-fit: contain;
+    object-position: 50% 100%;
+  }
+
+  /* Less floor wash: a short viewport needs far less of it to keep the
+     controls legible, and more of it just buries the scene. */
+  .hero-scene-floor {
+    background:
+      linear-gradient(180deg, rgba(6, 6, 5, 0.6) 0%, transparent 18%),
+      linear-gradient(0deg, rgba(6, 6, 5, 0.8) 0%, rgba(6, 6, 5, 0.2) 22%, transparent 44%);
+  }
+
+  .hero-scene-fore { height: 30%; }
+  .hero-scene-fore .hero-scene-img { object-fit: contain; object-position: 50% 100%; }
+}
+
+/* Two actions on one row need labels that fit. Below this they stack, rather
+   than wrapping mid-phrase into buttons of different heights. */
+@media (max-width: 460px) {
+  .hero-actions .btn { flex: 1 1 100%; }
+}
+
+/* Standalone links are navigation, not prose, so they get a real target.
+   Links inside a sentence are exempt and stay inline. */
+.footer-link,
+.footer-social,
+.hero-full-link,
+.featured-all,
+.maker-link,
+.crumbs a,
+.crumbs [aria-current="page"],
+.simple-body .link,
+.about-close .link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.25rem;
+}
+
+@media (pointer: coarse) {
+  .footer-link,
+  .footer-social,
+  .hero-full-link,
+  .featured-all,
+  .maker-link,
+  .crumbs a,
+  .simple-body .link {
+    min-height: 2.75rem;
+  }
+  .footer-list { gap: 0; }
+}
+
+/* A rotated knife's bounding box is much taller than the image itself — a 38°
+   rotation on a 1.57 aspect adds roughly 45% — so on a phone, where the copy
+   sits directly under the stage rather than beside it, the cutout was
+   overrunning into the text. These sizes keep the rotated extent inside the
+   stage at every rotation in the set. */
+@media (max-width: 1023px) {
+  .hero-stage { height: clamp(13rem, 34svh, 19rem); }
+  .hero-knife-img {
+    max-height: clamp(9rem, 22svh, 13rem);
+    max-width: 62vw;
+  }
+
+  /* And a scrim behind the copy, so text holds contrast over a pale antler or
+     a bright blade as well as over open sky. */
+  .hero-col { isolation: isolate; }
+  .hero-col::before {
+    content: "";
+    position: absolute;
+    inset: -0.75rem -1.5rem;
+    z-index: -1;
+    background: radial-gradient(ellipse 70% 60% at 50% 50%,
+      rgba(6, 6, 5, 0.78), rgba(6, 6, 5, 0.45) 55%, transparent 78%);
+    pointer-events: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .hero-stage { height: clamp(11rem, 30svh, 16rem); }
+  .hero-knife-img { max-height: clamp(8rem, 20svh, 11.5rem); max-width: 58vw; }
+}
