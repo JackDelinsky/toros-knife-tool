@@ -68,15 +68,6 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
     [length],
   );
 
-  const goTo = useCallback(
-    (index: number) => {
-      const offset = relativeOffset(index, active, length);
-      if (offset === 0) return;
-      step(offset > 0 ? 1 : -1);
-    },
-    [active, length, step],
-  );
-
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLElement>) => {
       if (inspecting) return;
@@ -202,8 +193,8 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
                 className="hero-slide"
                 data-role={isActive ? "active" : isNeighbour ? "neighbour" : "hidden"}
                 animate={{
-                  x: `${offset * 34}%`,
-                  scale: isActive ? 1 : 0.68,
+                  x: `${offset * 52}%`,
+                  scale: isActive ? 1 : 0.62,
                   opacity: isActive ? 1 : isNeighbour ? 0.34 : 0,
                   filter: isActive
                     ? "blur(0px) brightness(1) saturate(1)"
@@ -212,7 +203,6 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
                   zIndex: isActive ? 3 : 2 - Math.abs(offset),
                 }}
                 transition={spring}
-                style={{ pointerEvents: visible ? "auto" : "none" }}
                 aria-hidden={!isActive}
               >
                 {isActive ? (
@@ -220,6 +210,7 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
                     ref={inspectTrigger}
                     type="button"
                     className="hero-slide-button"
+                    style={{ pointerEvents: visible ? "auto" : "none" }}
                     onClick={openInspection}
                     aria-label={`Take a closer look at ${entry.product.name}`}
                   >
@@ -243,12 +234,9 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
                     </motion.div>
                   </button>
                 ) : (
-                  <button
-                    type="button"
+                  <div
                     className="hero-slide-button hero-slide-button--preview"
-                    onClick={() => goTo(index)}
-                    tabIndex={visible ? 0 : -1}
-                    aria-label={`Show ${entry.product.name}`}
+                    aria-hidden="true"
                   >
                     <div
                       style={{
@@ -266,11 +254,24 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
                         sizes="24vw"
                       />
                     </div>
-                  </button>
+                  </div>
                 )}
               </motion.div>
             );
           })}
+
+          <button
+            type="button"
+            className="hero-side-zone hero-side-zone--prev"
+            onClick={() => step(-1)}
+            aria-label={`Show ${knives[cycle(active - 1, length)].product.name}`}
+          />
+          <button
+            type="button"
+            className="hero-side-zone hero-side-zone--next"
+            onClick={() => step(1)}
+            aria-label={`Show ${knives[cycle(active + 1, length)].product.name}`}
+          />
 
           <div className="hero-stage-shadow" aria-hidden="true" />
         </motion.div>

@@ -2243,6 +2243,9 @@ body::after {
   place-items: center;
   transform-style: preserve-3d;
   will-change: transform, opacity, filter;
+  /* The slide box spans the whole stage, so it must not intercept clicks —
+     otherwise the active knife swallows taps meant for its neighbours. */
+  pointer-events: none;
 }
 
 .hero-slide-button {
@@ -2271,8 +2274,36 @@ body::after {
 }
 
 @media (min-width: 1024px) {
-  .hero-knife-img { max-height: clamp(20rem, 50svh, 31rem); }
+  .hero-knife-img {
+    max-height: clamp(20rem, 50svh, 31rem);
+    /* Keep a wide active knife from sprawling over its neighbours' hit areas. */
+    max-width: min(46vw, 30rem);
+  }
 }
+
+/* Deterministic navigation targets over the outer thirds of the stage. The
+   active cutout is a transparent PNG whose box is far wider than the knife, so
+   hit-testing must not depend on it. */
+.hero-side-zone {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 30%;
+  z-index: 4;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.hero-side-zone--prev { left: 0; }
+.hero-side-zone--next { right: 0; }
+.hero-side-zone:focus-visible {
+  outline: 2px solid var(--toros-brass);
+  outline-offset: -6px;
+  border-radius: 3px;
+}
+
+/* The active knife stays above the zones so its centre still opens inspection. */
+.hero-slide[data-role="active"] .hero-slide-button { position: relative; z-index: 5; }
 
 .hero-stage-shadow {
   position: absolute;
