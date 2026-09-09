@@ -8,10 +8,25 @@ interface SpinViewerProps {
   /** Describes the product once — not once per frame. */
   alt: string;
   className?: string;
+  /** Fired on a click that was not a drag, so the knife can still be opened. */
+  onTap?: () => void;
 }
 
 /** Frames loaded before the viewer becomes interactive, spread evenly. */
 const FIRST_PASS = 8;
+
+/**
+ * Pixels of horizontal travel for one complete turn.
+ *
+ * Deliberately a fixed distance rather than the element's width: tying it to
+ * the width meant a full rotation needed a drag from one edge of the viewer to
+ * the other, so you ran out of screen — and out of mousepad — before getting
+ * the knife all the way round.
+ */
+const PX_PER_TURN = 340;
+
+/** Movement under this is a click, not a drag. */
+const TAP_SLOP = 5;
 
 function frameSrc(spin: HeroSpin, index: number): string {
   return `${spin.dir}/frame-${String(index).padStart(3, "0")}.${spin.ext ?? "webp"}`;
@@ -30,7 +45,7 @@ function frameSrc(spin: HeroSpin, index: number): string {
  * pointer does and stops when it stops. Nothing spins on its own, which also
  * means there is nothing for `prefers-reduced-motion` to suppress.
  */
-export function SpinViewer({ spin, alt, className = "" }: SpinViewerProps) {
+export function SpinViewer({ spin, alt, className = "", onTap }: SpinViewerProps) {
   const [index, setIndex] = useState(0);
   const [ready, setReady] = useState(false);
   const [dragging, setDragging] = useState(false);
@@ -40,7 +55,7 @@ export function SpinViewer({ spin, alt, className = "" }: SpinViewerProps) {
   const [loaded, setLoaded] = useState<ReadonlySet<number>>(() => new Set());
 
   const surface = useRef<HTMLDivElement>(null);
-  const drag = useRef<{ x: number; from: number } | null>(null);
+  const drag = useRef<{ x: number; from: number; moved: boolean } | null>(null);
 
   // Coarse pass first, so the viewer is usable in a fraction of the bytes, then
   // fill in the rest in the background.
@@ -99,7 +114,7 @@ export function SpinViewer({ spin, alt, className = "" }: SpinViewerProps) {
     (e: React.PointerEvent<HTMLDivElement>) => {
       if (!ready) return;
       surface.current?.setPointerCapture(e.pointerId);
-      drag.current = { x: e.clientX, from: index };
+      drag.current = { x: e.clientX, from: index, moved: false };
       setDragging(true);
     },
     [index, ready],
@@ -108,23 +123,30 @@ export function SpinViewer({ spin, alt, className = "" }: SpinViewerProps) {
   const onPointerMove = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
       const d = drag.current;
-      const width = surface.current?.clientWidth ?? 1;
       if (!d) return;
-      // Roughly one full turn per container width dragged.
-      const perFrame = width / spin.frames;
-      const moved = Math.round((e.clientX - d.x) / perFrame);
-      const next = (((d.from + moved) % spin.frames) + spin.frames) % spin.frames;
-      setIndex(next);
+      const travel = e.clientX - d.x;
+      if (Math.abs(travel) > TAP_SLOP) d.moved = true;
+      // The pointer is captured, so this keeps counting past the element's
+      // edges and the knife keeps turning as long as the pointer moves.
+      const perFrame = PX_PER_TURN / spin.frames;
+      const steps = Math.round(travel / perFrame);
+      setIndex((((d.from + steps) % spin.frames) + spin.frames) % spin.frames);
     },
     [spin.frames],
   );
 
-  const endDrag = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    if (!drag.current) return;
-    surface.current?.releasePointerCapture?.(e.pointerId);
-    drag.current = null;
-    setDragging(false);
-  }, []);
+  const endDrag = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      const d = drag.current;
+      if (!d) return;
+      surface.current?.releasePointerCapture?.(e.pointerId);
+      drag.current = null;
+      setDragging(false);
+      // A press that never moved is a click on the product, not a rotation.
+      if (!d.moved) onTap?.();
+    },
+    [onTap],
+  );
 
   const onKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -139,46 +161,53 @@ export function SpinViewer({ spin, alt, className = "" }: SpinViewerProps) {
       } else if (e.key === "Home") {
         e.preventDefault();
         setIndex(0);
+      } else if ((e.key === "Enter" || e.key === " ") && onTap) {
+        e.preventDefault();
+        onTap();
       }
     },
-    [step],
+    [step, onTap],
   );
 
   const degrees = Math.round((index / spin.frames) * 360);
 
   return (
-    <div
-      ref={surface}
-      className={`spin ${className}`}
-      data-dragging={dragging || undefined}
-      data-ready={ready || undefined}
-      style={{ aspectRatio: `${spin.width} / ${spin.height}` }}
-      role="slider"
-      tabIndex={0}
-      aria-label={`Rotate ${alt}`}
-      aria-valuemin={0}
-      aria-valuemax={359}
-      aria-valuenow={degrees}
-      aria-valuetext={`Rotated ${degrees} degrees`}
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={endDrag}
-      onPointerCancel={endDrag}
-      onKeyDown={onKeyDown}
-    >
+    <div className="spin-wrap">
+      <div
+        ref={surface}
+        className={`spin ${className}`}
+        data-dragging={dragging || undefined}
+        data-ready={ready || undefined}
+        style={{ aspectRatio: `${spin.width} / ${spin.height}` }}
+        role="slider"
+        tabIndex={0}
+        aria-label={`Rotate ${alt}`}
+        aria-valuemin={0}
+        aria-valuemax={359}
+        aria-valuenow={degrees}
+        aria-valuetext={`Rotated ${degrees} degrees`}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
+        onKeyDown={onKeyDown}
+      >
       {/* eslint-disable-next-line @next/next/no-img-element -- the frame src
           changes many times a second while dragging; next/image would remount
           and re-request on every step. These are pre-sized, pre-optimised
           frames that the loader above has already warmed. */}
-      <img
-        src={frameSrc(spin, resolved)}
-        alt={alt}
-        width={spin.width}
-        height={spin.height}
-        className="spin-frame"
-        draggable={false}
-      />
+        <img
+          src={frameSrc(spin, resolved)}
+          alt={alt}
+          width={spin.width}
+          height={spin.height}
+          className="spin-frame"
+          draggable={false}
+        />
+      </div>
 
+      {/* Below the frame rather than floating over it: overlaid, it landed on
+          whatever followed the viewer once the panel got short. */}
       {ready ? (
         <p className="spin-hint" aria-hidden="true">
           Drag to turn

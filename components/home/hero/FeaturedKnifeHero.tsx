@@ -4,10 +4,12 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion, type PanInfo } from "framer-motion";
-import type { HeroKnife } from "@/components/home/hero/hero-knives";
+import { RIG_TEST_SPIN, type HeroKnife } from "@/components/home/hero/hero-knives";
 import { KnifeScene, KnifeSceneForeground } from "@/components/home/hero/KnifeScene";
 import { KnifeInspectionDialog } from "@/components/home/hero/KnifeInspectionDialog";
+import { SpinViewer } from "@/components/home/hero/SpinViewer";
 import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion";
+import { useRigTestMode } from "@/lib/use-rig-test";
 import { demoCartAdapter } from "@/lib/demo-cart";
 import { formatPrice } from "@/lib/products";
 
@@ -62,6 +64,7 @@ const MOUNT_RADIUS = 2;
 
 export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
   const reducedMotion = usePrefersReducedMotion();
+  const rigTest = useRigTestMode();
   const length = knives.length;
 
   const [active, setActive] = useState(0);
@@ -77,6 +80,11 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
 
   const knife = knives[active];
   const { presentation, product } = knife;
+
+  // The active knife turns in place when it has turntable frames. Navigation
+  // then moves to the arrows and the side knives, because a horizontal drag on
+  // the stage cannot mean "rotate this knife" and "go to the next one" at once.
+  const spin = rigTest ? RIG_TEST_SPIN : presentation.spin;
 
   // Rapid clicks and flicks are absorbed rather than queued, so the knife,
   // scene, copy and index can never drift out of step with each other.
@@ -201,7 +209,8 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
         {/* Centre — the stage */}
         <motion.div
           className="hero-stage"
-          drag="x"
+          data-spinning={spin ? true : undefined}
+          drag={spin ? false : "x"}
           dragDirectionLock
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={0.12}
@@ -250,7 +259,14 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
                 transition={spring}
                 aria-hidden={!isActive}
               >
-                {isActive ? (
+                {isActive && spin ? (
+                  <SpinViewer
+                    spin={spin}
+                    alt={`${entry.product.name}: ${entry.product.steel} blade with a ${entry.product.handleMaterial} handle`}
+                    className="hero-spin"
+                    onTap={openInspection}
+                  />
+                ) : isActive ? (
                   <button
                     ref={inspectTrigger}
                     type="button"

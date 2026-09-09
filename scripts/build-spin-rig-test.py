@@ -24,29 +24,48 @@ W = H = 900
 SS = 2                      # supersample factor, for clean edges
 
 
+STEEL = (0.42, 0.44, 0.47)
+BRASS = (0.66, 0.50, 0.24)
+DARK = (0.20, 0.21, 0.23)
+
+
 def block_mesh():
-    """A stepped block with a keyway and a chamfered corner — asymmetric on
-    every axis, so which way it is facing is never ambiguous."""
+    """A machined target that reads differently at every angle.
+
+    The first version of this was a near-symmetric slab, which made a full turn
+    impossible to see: it looked the same at 0 and 180 degrees, so the rotation
+    appeared to stop and reverse. Each quadrant now carries a different feature,
+    and one tall brass fin marks front, so a complete revolution is obvious.
+    """
     verts, faces = [], []
 
-    def box(cx, cy, cz, sx, sy, sz, shade):
+    def box(cx, cy, cz, sx, sy, sz, colour, shade=1.0):
         i = len(verts)
         for dx in (-1, 1):
             for dy in (-1, 1):
                 for dz in (-1, 1):
                     verts.append((cx + dx * sx, cy + dy * sy, cz + dz * sz))
-        # 6 quads as 12 triangles, indices into the 8 corners just added
         quads = [(0, 1, 3, 2), (4, 6, 7, 5), (0, 4, 5, 1),
                  (2, 3, 7, 6), (0, 2, 6, 4), (1, 5, 7, 3)]
         for q in quads:
             a, b, c, d = (i + n for n in q)
-            faces.append((a, b, c, shade))
-            faces.append((a, c, d, shade))
+            faces.append((a, b, c, colour, shade))
+            faces.append((a, c, d, colour, shade))
 
-    box(0, 0, 0, 1.0, 0.30, 0.62, 1.00)          # main body
-    box(0, 0.42, 0, 0.55, 0.14, 0.40, 0.88)      # raised step
-    box(-0.72, -0.10, 0.34, 0.18, 0.16, 0.18, 0.72)   # index lug
-    box(0.86, 0.05, -0.20, 0.12, 0.22, 0.30, 0.80)    # keyway rib
+    box(0, -0.30, 0, 0.92, 0.16, 0.58, STEEL, 0.92)     # base plate
+    box(0, 0.02, 0, 0.62, 0.20, 0.40, STEEL, 1.00)      # body
+    box(0, 0.30, 0, 0.34, 0.10, 0.24, STEEL, 0.86)      # top step
+
+    # front: a tall brass fin — the index mark you watch come round
+    box(0, 0.30, 0.52, 0.10, 0.42, 0.06, BRASS, 1.00)
+    # right: a low wide rail
+    box(0.74, -0.06, 0, 0.10, 0.10, 0.30, DARK, 0.95)
+    # back: a single stubby post
+    box(0, 0.10, -0.50, 0.09, 0.28, 0.08, STEEL, 0.78)
+    # left: two small pins, so left never reads like right
+    box(-0.74, -0.04, 0.18, 0.08, 0.12, 0.08, DARK, 0.95)
+    box(-0.74, -0.04, -0.18, 0.08, 0.12, 0.08, DARK, 0.95)
+
     return np.array(verts, dtype=np.float32), faces
 
 
@@ -77,7 +96,7 @@ def render(angle_deg: int) -> Image.Image:
 
     yy, xx = np.mgrid[0:sh, 0:sw].astype(np.float32)
 
-    for a, b, c, shade in faces:
+    for a, b, c, face_rgb, shade in faces:
         tri = np.array([[xs[a], ys[a]], [xs[b], ys[b]], [xs[c], ys[c]]], dtype=np.float32)
         n3 = np.cross(p[b] - p[a], p[c] - p[a])
         nl = np.linalg.norm(n3)
@@ -116,7 +135,7 @@ def render(angle_deg: int) -> Image.Image:
         half = light + view
         half /= np.linalg.norm(half)
         spec = max(float(np.dot(n3, half)), 0.0) ** 42
-        base = np.array([0.42, 0.44, 0.47], dtype=np.float32) * shade
+        base = np.array(face_rgb, dtype=np.float32) * shade
         px = base * (0.16 + 0.86 * lam) + np.array([1.0, 0.96, 0.88]) * spec * 0.65
 
         region_c = colour[y0:y1, x0:x1]
@@ -129,8 +148,32 @@ def render(angle_deg: int) -> Image.Image:
     out[..., 3] = (np.clip(alpha, 0, 1) * 255).astype(np.uint8)
     img = Image.fromarray(out, "RGBA").resize((W, H), Image.LANCZOS)
 
+    # A big angle readout: without it there is no way to tell a full turn from
+    # a half one, which is exactly how the first version read.
     d = ImageDraw.Draw(img)
-    d.text((18, 18), f"RIG TEST  {angle_deg:03d}°", fill=(190, 175, 150, 220))
+    label = f"{angle_deg:03d}\u00b0"
+    try:
+        from PIL import ImageFont
+        big = ImageFont.truetype(
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 74)
+        small = ImageFont.truetype(
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 24)
+    except Exception:
+        big = small = None
+    d.text((W // 2, 74), label, fill=(232, 220, 200, 235), font=big, anchor="mm")
+    d.text((W // 2, 128), "RIG TEST TARGET \u2014 NOT A PRODUCT",
+           fill=(154, 132, 104, 210), font=small, anchor="mm")
+
+    # A ring of ticks, one lit, so the rotation is readable even without the
+    # numbers — a dial you can watch go all the way round.
+    cx, cy, r = W // 2, int(H * 0.86), int(W * 0.16)
+    for t in range(36):
+        a = np.radians(t * 10 - angle_deg - 90)
+        x, y = cx + r * np.cos(a), cy + r * np.sin(a) * 0.34
+        lead = (t == 0)
+        rad = 7 if lead else 3
+        fill = (196, 165, 116, 255) if lead else (120, 116, 108, 150)
+        d.ellipse((x - rad, y - rad * 0.9, x + rad, y + rad * 0.9), fill=fill)
     return img
 
 

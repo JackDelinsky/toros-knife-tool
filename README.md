@@ -131,9 +131,15 @@ visitor drags and the knife turns. It is a sequence of photographs, not a 3D
 model — a model would invent the grind, the tang and the pin placement, and a
 polished blade is close to the worst possible subject for photogrammetry.
 
+It works in two places: the active knife on the hero stage, and the closer look.
+When a knife has frames the hero cutout becomes drag-to-rotate, and the stage
+stops swiping between knives — a horizontal drag cannot mean both "turn this"
+and "next one" — so navigation moves to the arrows and the side knives. A press
+that does not move still opens the closer look.
+
 No product has frames yet, so every knife shows its static cutout as before. To
-prove the viewer works, open any closer look with `?spin=rig-test` — that swaps
-in a rendered calibration block (deliberately not a knife).
+try the viewer, open the site with `?spin=rig-test` — that swaps in a rendered
+calibration target (deliberately not a knife) in both places.
 
 `docs/360-capture-guide.md` is the shoot: a lazy Susan, a locked-down camera,
 36 frames 10° apart. Then:
