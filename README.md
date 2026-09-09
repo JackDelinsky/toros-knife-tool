@@ -14,9 +14,13 @@ Premium e-commerce storefront for **Toros Knife & Tool** — handcrafted Turkish
 | --- |
 | ![Product detail page](docs/media/product-detail.png) |
 
-**Hero parallax + hover interaction:**
+**Homepage hero — manual seven-knife carousel (Framer Motion):**
 
-![Hero parallax and hover animation](docs/media/hero-animation.gif)
+![Hero carousel: selecting knives and opening the closer look](docs/media/hero-carousel.gif)
+
+**Closer look (inspection view):**
+
+![Inspection view for a featured knife](docs/media/hero-inspect.png)
 
 **Craftsmanship page — scroll-driven media expansion (Framer Motion):**
 
@@ -28,12 +32,14 @@ Premium e-commerce storefront for **Toros Knife & Tool** — handcrafted Turkish
 
 - Dark premium aesthetic with tan/gold accents
 - Mobile-first responsive layout
-- Homepage with hero, categories, featured products, heritage, maker story, use cases, collector club, email capture
+- Homepage hero: a manual seven-knife carousel with per-product environments and an
+  accessible inspection view (no autoplay; arrows, side selection, drag/swipe, arrow keys)
 - Shop page with category filtering
 - Product detail pages with specs, craftsmanship, care, shipping, and trust sections
-- Local product data (`data/products.ts`)
-- Placeholder product imagery (ready for real photos)
+- Local product data (`data/products.ts`) — the single source of truth for prices and specs
+- Real product photography, plus transparent hero cutouts in `public/images/hero/knives/`
 - Craftsmanship page (`/craftsmanship`) with a scroll-driven media expansion hero (Framer Motion)
+- Local demo cart behind a swappable `CommerceAdapter` seam (`lib/demo-cart.ts`) — no payment
 
 **Not included in Phase 1:** Knife Finder quiz, 360 viewer, event landing pages, email backend, live checkout.
 
@@ -52,7 +58,7 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://127.0.0.1:3004](http://127.0.0.1:3004) — the `dev` script uses port **3004**, not 3000.
 
 ```bash
 npm run build   # production build
@@ -67,6 +73,8 @@ toros-knife-tool/
 │   ├── layout.tsx          # Root layout, fonts, header/footer
 │   ├── page.tsx            # Homepage
 │   ├── shop/page.tsx       # Shop + category filter
+│   ├── craftsmanship/      # Scroll-driven media expansion page
+│   ├── about/, contact/, mystery-bag/, cart/, login/, register/
 │   └── products/[slug]/    # Product detail (static generation)
 ├── components/
 │   ├── Header.tsx          # Navigation + mobile menu
@@ -75,10 +83,14 @@ toros-knife-tool/
 │   ├── ProductGallery.tsx
 │   ├── ProductImage.tsx    # Real image or placeholder fallback
 │   ├── AddToCartButton.tsx # Checkout URL or placeholder CTA
-│   ├── home/               # Homepage sections
-│   └── ui/                 # Button, SectionHeader
+│   ├── home/
+│   │   ├── Hero.tsx        # Server wrapper — resolves the featured products
+│   │   └── hero/           # Carousel client island, environments, inspection
+│   └── ui/                 # Button, SectionHeader, ScrollExpandMedia
 ├── data/products.ts        # Product catalog (edit here)
 ├── lib/products.ts         # Data access helpers
+├── lib/demo-cart.ts        # Demo commerce adapter (no payment)
+├── docs/                   # Hero product + asset audits
 └── types/product.ts        # TypeScript product model
 ```
 
@@ -92,7 +104,7 @@ Open `data/products.ts`. Each product supports:
 |-------|-------------|
 | `name`, `slug`, `category`, `price` | Core listing info |
 | `shortDescription`, `longDescription` | Card + detail copy |
-| `images` | Array of image paths, e.g. `["/products/anatolian-hunter-1.jpg"]` |
+| `images` | Array of image paths, e.g. `["/images/products/gur-tuva/main.jpg"]` |
 | `spinImages` | Reserved for Phase 2 360 viewer |
 | `steel`, `handleMaterial`, `bladeLength`, `totalLength` | Specs table |
 | `bestUses`, `tags` | Use-case badges |
@@ -107,9 +119,9 @@ withDefaults({
   slug: "anatolian-hunter",
   // ...
   images: [
-    "/products/anatolian-hunter/front.jpg",
-    "/products/anatolian-hunter/profile.jpg",
-    "/products/anatolian-hunter/sheath.jpg",
+    "/images/products/anatolian-hunter/main.jpg",
+    "/images/products/anatolian-hunter/profile.jpg",
+    "/images/products/anatolian-hunter/sheath.jpg",
   ],
   checkoutUrl: "https://your-store.myshopify.com/cart/VARIANT_ID:1",
 }),
@@ -117,7 +129,12 @@ withDefaults({
 
 ### 2. Add product photos
 
-Place files in `public/products/` matching the paths in `images[]`. The `ProductImage` component automatically uses placeholders when `images` is empty.
+Place files in `public/images/products/{slug}/` matching the paths in `images[]`. The `ProductImage` component automatically uses placeholders when `images` is empty.
+
+If the product is also featured in the homepage hero, add a transparent cutout at
+`public/images/hero/knives/{slug}.png` and update its dimensions in
+`components/home/hero/hero-knives.ts`. `scripts/build-hero-cutouts.py` regenerates
+these from the product photography by masking — see `docs/hero-asset-audit.md`.
 
 Recommended specs:
 - **Hero / primary:** 1600×2000px (4:5 aspect)
@@ -157,19 +174,25 @@ Do **not** build custom payment processing. Use one of these approaches:
 
 Defined in `app/globals.css`:
 
-- **Charcoal** `#0c0b0a` — background
-- **Gold** `#c9a227` — primary accent
-- **Tan** `#a89070` — secondary text
-- **Red** `#8b2635` — sparing accent (out of stock, etc.)
+- **Black** `#060605` — page background (`--toros-black`)
+- **Charcoal** `#0d0c0a` / **Surface** `#141210` — raised surfaces
+- **Brass** `#a8894a`, light `#c4a574` — primary accent (`--toros-brass`)
+- **Parchment** `#e8dcc8` / **Sand** `#d4c4a8` — body and heading text
+- **Tan** `#9a8468` — secondary text
+- **Oxblood** `#5c1a1f` — sparing accent (out of stock, etc.)
+
+Each featured knife also contributes a per-product accent at runtime via
+`--knife-accent`, sampled from that knife's own materials.
 
 ## Phase 2 Roadmap
 
+- Multi-angle turntable frames or a GLB model for the hero (the carousel is built to accept them)
 - Knife Finder quiz (`KnifeFinderQuiz`)
-- 360 spin viewer (`Knife360Viewer`) when `spinImages` exist
 - Event/show QR landing page
 - Contact, custom inquiry, and newsletter form backends
-- About, Craftsmanship, Privacy, and Terms pages
-- Live Shopify or Supabase sync
+- Privacy and Terms pages
+- Real checkout: replace the demo `CommerceAdapter` with Shopify Storefront or Stripe
+- Reshoots for the two hero assets flagged in `docs/hero-asset-audit.md`
 
 ## License
 
