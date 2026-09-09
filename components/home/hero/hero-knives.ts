@@ -41,6 +41,31 @@ export interface HeroScene {
   summary: string;
 }
 
+/**
+ * A turntable sequence: `frames` photographs of one knife, shot at even angles
+ * on a rotating platform and named `frame-000` upward.
+ *
+ * This is deliberately a frame sequence and not a 3D model. A model of a knife
+ * is an object nobody made — it would invent the grind, the tang, the pin
+ * placement and the hammer marks, which is exactly the kind of invention the
+ * rest of this repository refuses. Every frame here is a photograph, so turning
+ * the knife can only show what the camera actually saw.
+ *
+ * No product has one yet; `docs/360-capture-guide.md` is the shoot that
+ * produces them. Until then `spin` stays undefined and the closer look shows
+ * the single static cutout, exactly as it does today.
+ */
+export interface HeroSpin {
+  /** Directory holding the frames, e.g. `/images/spin/gur-tombik`. */
+  dir: string;
+  frames: number;
+  /** Intrinsic frame size, so the viewer reserves its box before loading. */
+  width: number;
+  height: number;
+  /** Frame extension; webp unless a shoot delivers something else. */
+  ext?: string;
+}
+
 /** Whether the current cutout is good enough to ship at hero scale. */
 export type HeroAssetStatus = "ready" | "needs-reshoot";
 
@@ -59,6 +84,8 @@ export interface HeroKnifePresentation {
   accent: string;
   accentSecondary: string;
   scene: HeroScene;
+  /** Turntable frames, when the knife has been shot on a rig. */
+  spin?: HeroSpin;
   assetStatus: HeroAssetStatus;
   /** Why an asset is flagged, surfaced in docs/hero-asset-audit.md. */
   assetNote?: string;
@@ -265,3 +292,18 @@ export function getHeroKnives(): HeroKnife[] {
 
   return resolved;
 }
+
+/**
+ * The calibration target rendered by `scripts/build-spin-rig-test.py`.
+ *
+ * It exists to prove the viewer — the frame sequence, the drag mapping, the
+ * progressive loader — before any knife has been shot. It is never a product
+ * and never reached in normal use: the closer look only uses it when the page
+ * is opened with `?spin=rig-test`.
+ */
+export const RIG_TEST_SPIN: HeroSpin = {
+  dir: "/images/spin/rig-test",
+  frames: 36,
+  width: 900,
+  height: 900,
+};

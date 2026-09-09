@@ -3210,3 +3210,61 @@ body::after {
   .hero-stage { height: clamp(11rem, 30svh, 16rem); }
   .hero-knife-img { max-height: clamp(8rem, 20svh, 11.5rem); max-width: 58vw; }
 }
+
+/* ==========================================================================
+   Turntable viewer
+   ========================================================================== */
+
+.spin {
+  position: relative;
+  width: 100%;
+  max-width: min(100%, 34rem);
+  max-height: min(68svh, 40rem);
+  display: grid;
+  place-items: center;
+  /* Horizontal drags turn the knife; vertical ones still scroll the page. */
+  touch-action: pan-y;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.spin[data-dragging] { cursor: grabbing; }
+.spin:not([data-ready]) { cursor: progress; }
+
+.spin-frame {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  filter:
+    drop-shadow(0 34px 40px rgba(0, 0, 0, 0.72))
+    drop-shadow(0 0 46px color-mix(in srgb, var(--knife-accent) 26%, transparent));
+}
+
+/* The affordance is always present, not revealed on hover — it just steps back
+   once the visitor has started turning the knife. */
+.spin-hint,
+.spin-loading {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.3rem 0.8rem;
+  border: var(--line);
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--toros-black) 72%, transparent);
+  backdrop-filter: blur(6px);
+  font-size: var(--text-label);
+  color: var(--toros-sand);
+  white-space: nowrap;
+  transition: opacity var(--dur) var(--ease);
+}
+.spin[data-dragging] .spin-hint { opacity: 0.25; }
+
+@media (prefers-reduced-motion: reduce) {
+  .spin-hint { transition: none; }
+}
+
+@media (max-width: 899px) {
+  .spin { max-height: 40svh; }
+}

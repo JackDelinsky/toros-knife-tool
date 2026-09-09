@@ -124,6 +124,26 @@ key          the scene's directional light
 fore         near element, above the knife so it overlaps it
 ```
 
+## Turning a knife (360)
+
+The closer look can play a turntable sequence instead of a single cutout: the
+visitor drags and the knife turns. It is a sequence of photographs, not a 3D
+model — a model would invent the grind, the tang and the pin placement, and a
+polished blade is close to the worst possible subject for photogrammetry.
+
+No product has frames yet, so every knife shows its static cutout as before. To
+prove the viewer works, open any closer look with `?spin=rig-test` — that swaps
+in a rendered calibration block (deliberately not a knife).
+
+`docs/360-capture-guide.md` is the shoot: a lazy Susan, a locked-down camera,
+36 frames 10° apart. Then:
+
+```bash
+python3 scripts/build-spin-frames.py gur-tombik ~/shoots/tombik-turntable
+```
+
+which prints the one line to paste into `components/home/hero/hero-knives.ts`.
+
 ## Asset pipelines
 
 All three are re-runnable and none of them redraws a product.
@@ -132,6 +152,8 @@ All three are re-runnable and none of them redraws a product.
 python3 scripts/build-hero-scenes.py [slug ...]   # environment plates
 python3 scripts/build-hero-cutouts.py             # masked product cutouts
 python3 scripts/normalize-product-photos.py       # 4:3 card frames
+python3 scripts/build-spin-frames.py <slug> <dir> # 360 turntable frames
+python3 scripts/build-spin-rig-test.py            # viewer calibration target
 ```
 
 - **Scenes** are procedural: fractal terrain, directional light and material
@@ -210,6 +232,8 @@ that knife's own materials.
   `docs/product-photo-reshoot-list.md`.
 - `gur-tuva`'s recorded handle material contradicts its photograph. The record
   has not been guessed at — `docs/hero-product-audit.md`.
+- The 360 viewer has no real frames yet; it needs a turntable shoot —
+  `docs/360-capture-guide.md`.
 - No checkout, authentication, or email backend.
 
 ## License

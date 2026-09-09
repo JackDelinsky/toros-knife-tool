@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import type { HeroKnife } from "@/components/home/hero/hero-knives";
+import { RIG_TEST_SPIN, type HeroKnife } from "@/components/home/hero/hero-knives";
+import { SpinViewer } from "@/components/home/hero/SpinViewer";
 import { formatPrice } from "@/lib/products";
 import { CATEGORY_LABELS } from "@/types/product";
 
@@ -77,6 +78,18 @@ export function KnifeInspectionDialog({
       previouslyFocused?.focus?.();
     };
   }, [onClose]);
+
+  // Turntable frames when the knife has been shot on a rig. `?spin=rig-test`
+  // substitutes the calibration target so the viewer can be exercised before
+  // any real shoot exists; it is read once, on the client, and the dialog only
+  // ever mounts from a click, so there is no server render to disagree with.
+  const [spin] = useState(() => {
+    if (typeof window !== "undefined"
+        && new URLSearchParams(window.location.search).get("spin") === "rig-test") {
+      return RIG_TEST_SPIN;
+    }
+    return presentation.spin;
+  });
 
   const specs = [
     { label: "Steel", value: product.steel },
@@ -150,20 +163,28 @@ export function KnifeInspectionDialog({
         </button>
 
         <div className="inspect-stage">
-          <motion.div
-            className="inspect-knife-wrap"
-            layoutId={reducedMotion ? undefined : `hero-knife-${product.slug}`}
-            style={{ rotate: presentation.imageRotation, scale: presentation.imageScale }}
-          >
-            <Image
-              src={presentation.cutoutSrc}
+          {spin ? (
+            <SpinViewer
+              spin={spin}
               alt={`${product.name}: ${product.steel} blade with a ${product.handleMaterial} handle`}
-              width={presentation.cutoutWidth}
-              height={presentation.cutoutHeight}
-              className="inspect-knife"
-              sizes="(max-width: 900px) 92vw, 52vw"
+              className="inspect-spin"
             />
-          </motion.div>
+          ) : (
+            <motion.div
+              className="inspect-knife-wrap"
+              layoutId={reducedMotion ? undefined : `hero-knife-${product.slug}`}
+              style={{ rotate: presentation.imageRotation, scale: presentation.imageScale }}
+            >
+              <Image
+                src={presentation.cutoutSrc}
+                alt={`${product.name}: ${product.steel} blade with a ${product.handleMaterial} handle`}
+                width={presentation.cutoutWidth}
+                height={presentation.cutoutHeight}
+                className="inspect-knife"
+                sizes="(max-width: 900px) 92vw, 52vw"
+              />
+            </motion.div>
+          )}
         </div>
 
         <div className="inspect-detail">
