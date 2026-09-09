@@ -163,6 +163,7 @@ export function KnifeInspectionDialog({
               spin={spin}
               alt={`${product.name}: ${product.steel} blade with a ${product.handleMaterial} handle`}
               className="inspect-spin"
+              poster={presentation.cutoutSrc}
             />
           ) : (
             <motion.div

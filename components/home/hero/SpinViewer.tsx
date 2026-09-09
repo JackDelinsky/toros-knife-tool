@@ -10,6 +10,8 @@ interface SpinViewerProps {
   className?: string;
   /** Fired on a click that was not a drag, so the knife can still be opened. */
   onTap?: () => void;
+  /** Shown until the first frames arrive, so the hero never paints empty. */
+  poster?: string;
 }
 
 /** Frames loaded before the viewer becomes interactive, spread evenly. */
@@ -33,20 +35,29 @@ function frameSrc(spin: HeroSpin, index: number): string {
 }
 
 /**
- * A turntable viewer: the visitor drags and the knife turns.
+ * The visitor drags and the knife moves.
  *
- * It plays a sequence of photographs rather than rendering a model. That is the
- * whole point — a 3D model of a knife is something nobody made, and it would
- * invent the grind, the tang, the pin placement and the hammer marks. Every
- * frame here is a photograph of the actual object, so turning it can only ever
- * show what is really there.
+ * It plays frames rather than rendering a model. A model of a knife is an
+ * object nobody made: it would invent the grind, the tang, the pin placement
+ * and the hammer marks. Frames can only ever show what was really there.
+ *
+ * Two kinds feed it, and `spin.arc` is what tells them apart. A full 360 comes
+ * from a real turntable shoot and wraps. A shorter arc is derived from the one
+ * product photograph by estimating thickness from the silhouette — the same
+ * pixels, genuinely re-projected, but only far enough to feel solid. It clamps,
+ * and it never pretends to reach the far side, because nothing photographed it.
  *
  * There is no autoplay and no momentum: the knife moves exactly as far as the
- * pointer does and stops when it stops. Nothing spins on its own, which also
+ * pointer does and stops when it stops. Nothing moves on its own, which also
  * means there is nothing for `prefers-reduced-motion` to suppress.
  */
-export function SpinViewer({ spin, alt, className = "", onTap }: SpinViewerProps) {
-  const [index, setIndex] = useState(0);
+export function SpinViewer({ spin, alt, className = "", onTap, poster }: SpinViewerProps) {
+  // A sweep opens at its middle frame, which is the undistorted photograph —
+  // frame 0 is one extreme, and resting there would show every visitor a
+  // tilted knife instead of the picture that was actually taken.
+  const [index, setIndex] = useState(() =>
+    (spin.arc ?? 360) >= 360 ? 0 : Math.floor((spin.frames - 1) / 2),
+  );
   const [ready, setReady] = useState(false);
   const [dragging, setDragging] = useState(false);
   // Which frames have arrived. State rather than a ref: render reads this to
@@ -105,10 +116,20 @@ export function SpinViewer({ spin, alt, className = "", onTap }: SpinViewerProps
     }
   }
 
-  const step = useCallback(
-    (delta: number) => setIndex((i) => (((i + delta) % spin.frames) + spin.frames) % spin.frames),
-    [spin.frames],
+  // A full turntable wraps; a limited sweep clamps, so it settles at each end
+  // instead of snapping back to the opposite extreme.
+  const arc = spin.arc ?? 360;
+  const wraps = arc >= 360;
+
+  const clamp = useCallback(
+    (i: number) =>
+      wraps
+        ? ((i % spin.frames) + spin.frames) % spin.frames
+        : Math.min(spin.frames - 1, Math.max(0, i)),
+    [spin.frames, wraps],
   );
+
+  const step = useCallback((delta: number) => setIndex((i) => clamp(i + delta)), [clamp]);
 
   const onPointerDown = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
@@ -128,11 +149,12 @@ export function SpinViewer({ spin, alt, className = "", onTap }: SpinViewerProps
       if (Math.abs(travel) > TAP_SLOP) d.moved = true;
       // The pointer is captured, so this keeps counting past the element's
       // edges and the knife keeps turning as long as the pointer moves.
-      const perFrame = PX_PER_TURN / spin.frames;
-      const steps = Math.round(travel / perFrame);
-      setIndex((((d.from + steps) % spin.frames) + spin.frames) % spin.frames);
+      // A short sweep gets a slower mapping: it is a fine inspection, not a
+      // spin, and it should not shoot end to end in a flick.
+      const perFrame = wraps ? PX_PER_TURN / spin.frames : 20;
+      setIndex(clamp(d.from + Math.round(travel / perFrame)));
     },
-    [spin.frames],
+    [wraps, spin.frames, clamp],
   );
 
   const endDrag = useCallback(
@@ -160,16 +182,18 @@ export function SpinViewer({ spin, alt, className = "", onTap }: SpinViewerProps
         step(-1);
       } else if (e.key === "Home") {
         e.preventDefault();
-        setIndex(0);
+        setIndex(wraps ? 0 : Math.floor((spin.frames - 1) / 2));
       } else if ((e.key === "Enter" || e.key === " ") && onTap) {
         e.preventDefault();
         onTap();
       }
     },
-    [step, onTap],
+    [step, onTap, wraps, spin.frames],
   );
 
-  const degrees = Math.round((index / spin.frames) * 360);
+  const degrees = wraps
+    ? Math.round((index / spin.frames) * 360)
+    : Math.round(-arc / 2 + (index / Math.max(spin.frames - 1, 1)) * arc);
 
   return (
     <div className="spin-wrap">
@@ -181,11 +205,11 @@ export function SpinViewer({ spin, alt, className = "", onTap }: SpinViewerProps
         style={{ aspectRatio: `${spin.width} / ${spin.height}` }}
         role="slider"
         tabIndex={0}
-        aria-label={`Rotate ${alt}`}
-        aria-valuemin={0}
-        aria-valuemax={359}
+        aria-label={`${wraps ? "Rotate" : "Tilt"} ${alt}`}
+        aria-valuemin={wraps ? 0 : Math.round(-arc / 2)}
+        aria-valuemax={wraps ? 359 : Math.round(arc / 2)}
         aria-valuenow={degrees}
-        aria-valuetext={`Rotated ${degrees} degrees`}
+        aria-valuetext={`${wraps ? "Rotated" : "Tilted"} ${degrees} degrees`}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={endDrag}
@@ -197,7 +221,7 @@ export function SpinViewer({ spin, alt, className = "", onTap }: SpinViewerProps
           and re-request on every step. These are pre-sized, pre-optimised
           frames that the loader above has already warmed. */}
         <img
-          src={frameSrc(spin, resolved)}
+          src={ready ? frameSrc(spin, resolved) : (poster ?? frameSrc(spin, resolved))}
           alt={alt}
           width={spin.width}
           height={spin.height}
@@ -210,7 +234,7 @@ export function SpinViewer({ spin, alt, className = "", onTap }: SpinViewerProps
           whatever followed the viewer once the panel got short. */}
       {ready ? (
         <p className="spin-hint" aria-hidden="true">
-          Drag to turn
+          {wraps ? "Drag to turn" : "Drag to tilt"}
         </p>
       ) : (
         <p className="spin-loading" role="status">

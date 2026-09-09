@@ -131,6 +131,18 @@ visitor drags and the knife turns. It is a sequence of photographs, not a 3D
 model — a model would invent the grind, the tang and the pin placement, and a
 polished blade is close to the worst possible subject for photogrammetry.
 
+Two kinds of frames feed it, and `spin.arc` tells them apart.
+
+**Today, all seven knives use derived relief.** `scripts/build-relief-frames.py`
+estimates thickness from each cutout's own silhouette and re-projects the real
+photograph across a +/-24 degree arc. The handle turns, the highlight travels,
+the near edge occludes the far one — and every pixel came off the camera. It
+opens on the undistorted photograph and clamps at both ends. It is not a 360 and
+never shows the far side, because nothing photographed it.
+
+**A real turntable shoot replaces it** and sets `arc: 360`, which makes the
+viewer wrap instead of clamp. Nothing else changes.
+
 It works in two places: the active knife on the hero stage, and the closer look.
 When a knife has frames the hero cutout becomes drag-to-rotate, and the stage
 stops swiping between knives — a horizontal drag cannot mean both "turn this"
@@ -159,6 +171,7 @@ python3 scripts/build-hero-scenes.py [slug ...]   # environment plates
 python3 scripts/build-hero-cutouts.py             # masked product cutouts
 python3 scripts/normalize-product-photos.py       # 4:3 card frames
 python3 scripts/build-spin-frames.py <slug> <dir> # 360 turntable frames
+python3 scripts/build-relief-frames.py <slug> <d> # parallax from one photo
 python3 scripts/build-spin-rig-test.py            # viewer calibration target
 ```
 
@@ -238,7 +251,8 @@ that knife's own materials.
   `docs/product-photo-reshoot-list.md`.
 - `gur-tuva`'s recorded handle material contradicts its photograph. The record
   has not been guessed at — `docs/hero-product-audit.md`.
-- The 360 viewer has no real frames yet; it needs a turntable shoot —
+- The hero knives turn on *derived* relief, not photographed angles. The arc is
+  capped and the far side is never shown. A turntable shoot replaces it —
   `docs/360-capture-guide.md`.
 - No checkout, authentication, or email backend.
 

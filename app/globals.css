@@ -1970,6 +1970,14 @@ body::after {
    side of it still navigates. */
 .hero-slide[data-role="active"] .spin-wrap .spin { pointer-events: auto; }
 
+/* Neighbours take pointer events too, so a visitor can point at the knife they
+   want. They sit below the active slide, so the overlap belongs to whatever is
+   centre stage and only their outer part selects. */
+.hero-slide[data-role="neighbour"] .hero-slide-button--neighbour {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
 .hero-contact-shadow {
   position: absolute;
   bottom: 4%;

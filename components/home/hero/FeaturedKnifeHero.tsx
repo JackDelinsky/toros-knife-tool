@@ -257,13 +257,13 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
                 initial={pose}
                 animate={pose}
                 transition={spring}
-                aria-hidden={!isActive}
               >
                 {isActive && spin ? (
                   <SpinViewer
                     spin={spin}
                     alt={`${entry.product.name}: ${entry.product.steel} blade with a ${entry.product.handleMaterial} handle`}
                     className="hero-spin"
+                    poster={entry.presentation.cutoutSrc}
                     onTap={openInspection}
                   />
                 ) : isActive ? (
@@ -289,7 +289,17 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
                     </span>
                   </button>
                 ) : (
-                  <div className="hero-slide-button" aria-hidden="true">
+                  // The neighbours are their own selection targets. The side
+                  // zones cannot cover a knife that is being dragged, so
+                  // without this there is no way to pick the next knife by
+                  // pointing at it — only the arrows.
+                  <button
+                    type="button"
+                    className="hero-slide-button hero-slide-button--neighbour"
+                    onClick={() => step(offset > 0 ? 1 : -1)}
+                    tabIndex={-1}
+                    aria-label={`Show ${entry.product.name}`}
+                  >
                     <div
                       className="hero-knife-wrap"
                       style={{
@@ -299,7 +309,7 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
                     >
                       {image}
                     </div>
-                  </div>
+                  </button>
                 )}
               </motion.div>
             );
