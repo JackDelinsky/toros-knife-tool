@@ -15,6 +15,33 @@ The blade is the part that would come out worst, and the blade is the product.
 A turntable sequence has neither problem. Every frame is a photograph, so
 turning the knife can only ever show what was really there.
 
+## The fast way: shoot a video
+
+You do not have to take 36 photographs. Record one slow turn and the pipeline
+samples the angles out of it.
+
+1. Stand the knife on a **lazy Susan** (a kitchen turntable, or a plate on a
+   smooth counter).
+2. **Phone on a tripod**, or propped against something solid. It must not move.
+3. Lock the phone's exposure and focus: on iPhone, **press and hold** on the
+   knife until AE/AF LOCK appears. This is the step that matters most — on auto,
+   every frame is exposed differently and the sequence flickers.
+4. Hit record. Turn the platform through **one full revolution, slowly** —
+   aim for 15–20 seconds. Stop recording.
+5. Keep your hand off the knife and out of frame. Push the platform's edge.
+
+Then:
+
+```bash
+python3 scripts/build-spin-frames.py gur-tombik ~/Desktop/tombik.mov
+```
+
+It samples 36 evenly-spaced frames, masks each one, crops them all to a shared
+box, and prints the config line to paste. One take, about a minute of work.
+
+If the first try comes out uneven, turn more slowly and go again — it is a
+20-second recording.
+
 ## What the shoot has to produce
 
 | | Minimum | Good | Why |
@@ -24,10 +51,10 @@ turning the knife can only ever show what was really there.
 | Format | max-quality JPEG | RAW | Same reason as every other photo here. |
 | Weight, processed | — | ~25–40 KB/frame | 36 frames lands near 1.2 MB, loaded only when someone opens the closer look. |
 
-## The rig
+## The deliberate way: individual frames
 
-You do not need to buy a turntable. A **lazy Susan** from a kitchen shop works,
-and so does a dinner plate on a smooth counter.
+If you would rather shoot each angle by hand — worth it for the one knife you
+care most about — this is the setup.
 
 1. **Mark the angles.** Tape a paper circle to the platform with 36 marks 10°
    apart. Print a protractor, or step round by eye against a ruler — consistency
@@ -62,6 +89,10 @@ and so does a dinner plate on a smooth counter.
 ## Processing
 
 ```bash
+# a video of one turn
+python3 scripts/build-spin-frames.py gur-tombik ~/Desktop/tombik.mov
+
+# or a folder of stills
 python3 scripts/build-spin-frames.py gur-tombik ~/shoots/tombik-turntable
 ```
 
@@ -71,12 +102,25 @@ pinned in place, resizes, and writes
 to paste into `components/home/hero/hero-knives.ts`:
 
 ```ts
-spin: { dir: "/images/spin/gur-tombik", frames: 36, width: 1100, height: 820 },
+spin: { dir: "/images/spin/gur-tombik", frames: 36, width: 1100, height: 820,
+        arc: 360, source: "photographed" },
 ```
 
-Add that to the knife's entry and the closer look switches from the single
-static cutout to the turntable. Nothing else has to change; a knife without a
+`arc: 360` is the switch. Below 360 the viewer clamps at both ends — that is the
+derived inspection sweep the site ships today. At 360 it wraps, and the knife
+turns all the way round, forever, in either direction. Nothing else changes. Nothing else has to change; a knife without a
 `spin` entry keeps working exactly as it does now.
+
+## What you have today, and what this replaces
+
+Right now all seven knives use a **derived** sweep: `scripts/build-relief-frames.py`
+estimates thickness from each cutout's silhouette and re-projects the single
+product photograph across 90 degrees. Real pixels, real parallax, but a quarter
+turn and no far side.
+
+A video replaces that with the real thing for whichever knife you shoot. The two
+can coexist — one knife on real frames, the rest on derived — because `arc` is
+per knife.
 
 ## Checking it before the rig test comes down
 

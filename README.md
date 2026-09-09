@@ -135,13 +135,20 @@ Two kinds of frames feed it, and `spin.arc` tells them apart.
 
 **Today, all seven knives use derived relief.** `scripts/build-relief-frames.py`
 estimates thickness from each cutout's own silhouette and re-projects the real
-photograph across a +/-24 degree arc. The handle turns, the highlight travels,
+photograph across a 90 degree arc (+/-45, the point past which the relief starts
+to smear). The handle turns, the highlight travels,
 the near edge occludes the far one — and every pixel came off the camera. It
 opens on the undistorted photograph and clamps at both ends. It is not a 360 and
 never shows the far side, because nothing photographed it.
 
 **A real turntable shoot replaces it** and sets `arc: 360`, which makes the
-viewer wrap instead of clamp. Nothing else changes.
+viewer wrap instead of clamp. Nothing else changes. The shoot is now a
+20-second video — stand the knife on a lazy Susan, lock exposure, record one
+slow turn — and `scripts/build-spin-frames.py` samples the angles out of it:
+
+```bash
+python3 scripts/build-spin-frames.py gur-tombik ~/Desktop/tombik.mov
+```
 
 It works in two places: the active knife on the hero stage, and the closer look.
 When a knife has frames the hero cutout becomes drag-to-rotate, and the stage
@@ -170,7 +177,7 @@ All three are re-runnable and none of them redraws a product.
 python3 scripts/build-hero-scenes.py [slug ...]   # environment plates
 python3 scripts/build-hero-cutouts.py             # masked product cutouts
 python3 scripts/normalize-product-photos.py       # 4:3 card frames
-python3 scripts/build-spin-frames.py <slug> <dir> # 360 turntable frames
+python3 scripts/build-spin-frames.py <slug> <vid> # 360 frames from a video
 python3 scripts/build-relief-frames.py <slug> <d> # parallax from one photo
 python3 scripts/build-spin-rig-test.py            # viewer calibration target
 ```

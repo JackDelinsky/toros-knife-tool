@@ -122,10 +122,10 @@ export const HERO_KNIVES: readonly HeroKnifePresentation[] = [
     accentSecondary: "#1f6f8b",
     spin: {
       dir: "/images/spin/toros-jellybean",
-      frames: 17,
+      frames: 21,
       width: 272,
       height: 866,
-      arc: 48,
+      arc: 90,
       source: "relief",
     },
     scene: {
@@ -155,10 +155,10 @@ export const HERO_KNIVES: readonly HeroKnifePresentation[] = [
     accentSecondary: "#8a6a33",
     spin: {
       dir: "/images/spin/bos-stag-golden-horn",
-      frames: 17,
+      frames: 21,
       width: 810,
       height: 516,
-      arc: 48,
+      arc: 90,
       source: "relief",
     },
     scene: {
@@ -186,10 +186,10 @@ export const HERO_KNIVES: readonly HeroKnifePresentation[] = [
     accentSecondary: "#5c6b78",
     spin: {
       dir: "/images/spin/sakra-bear-claw-neck-knives",
-      frames: 17,
+      frames: 21,
       width: 361,
       height: 391,
-      arc: 48,
+      arc: 90,
       source: "relief",
     },
     scene: {
@@ -219,10 +219,10 @@ export const HERO_KNIVES: readonly HeroKnifePresentation[] = [
     accentSecondary: "#8a5a26",
     spin: {
       dir: "/images/spin/misty-stubby-giraffe",
-      frames: 17,
+      frames: 21,
       width: 791,
       height: 347,
-      arc: 48,
+      arc: 90,
       source: "relief",
     },
     scene: {
@@ -250,10 +250,10 @@ export const HERO_KNIVES: readonly HeroKnifePresentation[] = [
     accentSecondary: "#b5643a",
     spin: {
       dir: "/images/spin/misty-rebar-shank",
-      frames: 17,
+      frames: 21,
       width: 860,
       height: 470,
-      arc: 48,
+      arc: 90,
       source: "relief",
     },
     scene: {
@@ -281,10 +281,10 @@ export const HERO_KNIVES: readonly HeroKnifePresentation[] = [
     accentSecondary: "#6b4a2a",
     spin: {
       dir: "/images/spin/gur-tuva",
-      frames: 17,
+      frames: 21,
       width: 873,
       height: 566,
-      arc: 48,
+      arc: 90,
       source: "relief",
     },
     scene: {
@@ -314,10 +314,10 @@ export const HERO_KNIVES: readonly HeroKnifePresentation[] = [
     accentSecondary: "#7a4a22",
     spin: {
       dir: "/images/spin/gur-tombik",
-      frames: 17,
+      frames: 21,
       width: 870,
       height: 542,
-      arc: 48,
+      arc: 90,
       source: "relief",
     },
     scene: {
