@@ -7,15 +7,23 @@ import { TorosLogo } from "@/components/ui/TorosLogo";
 
 const SESSION_KEY = "toros-insider-dismissed";
 
-// Immersive, scroll-driven pages where a popup would interrupt the experience.
-const SUPPRESSED_PATHS = ["/craftsmanship"];
+/**
+ * Immersive routes where a timed popup would interrupt the experience: the
+ * homepage opens on the fullscreen knife carousel, and /craftsmanship is a
+ * scroll-driven reveal. "/" is matched exactly — prefix-matching it would
+ * suppress the popup on every route on the site.
+ */
+const SUPPRESSED_EXACT = ["/"];
+const SUPPRESSED_PREFIXES = ["/craftsmanship"];
 
 export function InsiderPopup() {
   const pathname = usePathname();
   const [visible, setVisible] = useState(false);
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
-  const suppressed = SUPPRESSED_PATHS.some((path) => pathname?.startsWith(path));
+  const suppressed =
+    SUPPRESSED_EXACT.includes(pathname ?? "") ||
+    SUPPRESSED_PREFIXES.some((path) => pathname?.startsWith(path));
 
   useEffect(() => {
     if (suppressed || sessionStorage.getItem(SESSION_KEY)) return;

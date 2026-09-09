@@ -1,0 +1,79 @@
+[
+  {
+    "slug": "toros-jellybean",
+    "source": "public/images/products/toros-jellybean/main.jpg",
+    "sourceSize": "900x1200",
+    "contentBox": "900x600",
+    "output": "public/images/hero/knives/toros-jellybean.png",
+    "outputSize": "272x866",
+    "coverage": 0.54,
+    "softEdgePx": 5938,
+    "note": "Source shows three colourways; the teal/blue knife is the hero subject. Smallest source region of the seven \u2014 upscaled 2x, flagged for reshoot."
+  },
+  {
+    "slug": "bos-stag-golden-horn",
+    "source": "public/images/products/bos-stag-golden-horn/main.jpg",
+    "sourceSize": "900x1200",
+    "contentBox": "900x600",
+    "output": "public/images/hero/knives/bos-stag-golden-horn.png",
+    "outputSize": "810x516",
+    "coverage": 0.345,
+    "softEdgePx": 10813,
+    "note": "Knife rests on its sheath; kept as the single merged subject."
+  },
+  {
+    "slug": "sakra-bear-claw-neck-knives",
+    "source": "public/images/products/sakra-bear-claw-neck-knives/main.jpg",
+    "sourceSize": "900x1200",
+    "contentBox": "810x625",
+    "output": "public/images/hero/knives/sakra-bear-claw-neck-knives.png",
+    "outputSize": "361x391",
+    "coverage": 0.267,
+    "softEdgePx": 2048,
+    "note": "Source shows five colourways; front knife chosen as hero subject."
+  },
+  {
+    "slug": "misty-stubby-giraffe",
+    "source": "public/images/products/misty-stubby-giraffe/main.jpg",
+    "sourceSize": "900x1200",
+    "contentBox": "900x600",
+    "output": "public/images/hero/knives/misty-stubby-giraffe.png",
+    "outputSize": "791x347",
+    "coverage": 0.475,
+    "softEdgePx": 4263,
+    "note": "Single knife, thuya burl handle."
+  },
+  {
+    "slug": "misty-rebar-shank",
+    "source": "public/images/products/misty-rebar-shank/main.jpg",
+    "sourceSize": "900x1200",
+    "contentBox": "900x675",
+    "output": "public/images/hero/knives/misty-rebar-shank.png",
+    "outputSize": "860x470",
+    "coverage": 0.42,
+    "softEdgePx": 9223,
+    "note": "Knife with twisted rebar handle, resting on sheath."
+  },
+  {
+    "slug": "gur-tuva",
+    "source": "public/images/products/gur-tuva/main.jpg",
+    "sourceSize": "900x1200",
+    "contentBox": "900x675",
+    "output": "public/images/hero/knives/gur-tuva.png",
+    "outputSize": "873x566",
+    "coverage": 0.39,
+    "softEdgePx": 76359,
+    "note": "Knife resting on sheath."
+  },
+  {
+    "slug": "gur-tombik",
+    "source": "public/images/products/gur-tombik/main.jpg",
+    "sourceSize": "900x1200",
+    "contentBox": "900x675",
+    "output": "public/images/hero/knives/gur-tombik.png",
+    "outputSize": "870x542",
+    "coverage": 0.406,
+    "softEdgePx": 10352,
+    "note": "Knife resting on sheath."
+  }
+]
