@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { FooterNewsletter } from "@/components/FooterNewsletter";
 import { TorosLogo } from "@/components/ui/TorosLogo";
 
 const INSTAGRAM_URL = "https://www.instagram.com/toros_knife";
@@ -71,6 +72,8 @@ export function Footer() {
               </ul>
             </div>
           ))}
+
+          <FooterNewsletter />
         </div>
       </div>
 

@@ -1,24 +1,19 @@
-import { CollectionNavigator } from "@/components/home/CollectionNavigator";
-import { FeaturedEditorial } from "@/components/home/FeaturedEditorial";
+import { CategoryExperience } from "@/components/home/category/CategoryExperience";
 import { Hero } from "@/components/home/Hero";
-import { JellybeanDrop } from "@/components/home/JellybeanDrop";
-import { MakerStory } from "@/components/home/MakerStory";
-import { NewsletterClose } from "@/components/home/NewsletterClose";
+import { HeroStage } from "@/components/home/HeroStage";
 
 /**
- * The homepage reads as one journey: the carousel, then where to go, then what
- * is on the bench, then who made it, then the one offer worth interrupting for,
- * then a quiet close.
+ * The homepage is two things now, not six: the carousel, and the catalogue it
+ * hands you to. Everything that used to sit between them was a separate band
+ * competing for the same scroll.
  */
 export default function Home() {
   return (
     <>
-      <Hero />
-      <CollectionNavigator />
-      <FeaturedEditorial />
-      <MakerStory />
-      <JellybeanDrop />
-      <NewsletterClose />
+      <HeroStage>
+        <Hero />
+      </HeroStage>
+      <CategoryExperience />
     </>
   );
 }

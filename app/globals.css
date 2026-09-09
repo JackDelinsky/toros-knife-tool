@@ -2352,98 +2352,6 @@ body::after {
   color: var(--toros-brass-light);
 }
 
-/* ==========================================================================
-   Homepage — the journey below the hero
-   ========================================================================== */
-
-/* --- Collection navigator ------------------------------------------------ */
-
-.collections { border-top: var(--line-faint); }
-
-.collections-row {
-  display: grid;
-  grid-template-columns: 1fr;
-}
-@media (min-width: 640px) { .collections-row { grid-template-columns: repeat(2, 1fr); } }
-@media (min-width: 1024px) { .collections-row { grid-template-columns: repeat(4, 1fr); } }
-
-.collections-row > li + li { border-top: var(--line-faint); }
-@media (min-width: 640px) {
-  .collections-row > li { border-top: 0 !important; }
-  .collections-row > li + li { border-left: var(--line-faint); }
-  .collections-row > li:nth-child(3) { border-left: 0; }
-}
-@media (min-width: 1024px) {
-  .collections-row > li:nth-child(3) { border-left: var(--line-faint); }
-}
-
-.collection {
-  display: block;
-  padding: var(--space-md) 0;
-  transition: background-color var(--dur) var(--ease);
-}
-@media (min-width: 640px) { .collection { padding-inline: var(--space-md); } }
-.collection:hover { background: color-mix(in srgb, var(--toros-surface) 55%, transparent); }
-
-.collection-index {
-  display: block;
-  font-size: var(--text-label);
-  color: var(--toros-steel-dark);
-  font-variant-numeric: tabular-nums;
-}
-.collection-name {
-  display: block;
-  margin-top: 0.4rem;
-  font-family: var(--font-display), Georgia, serif;
-  font-size: var(--text-h3);
-  font-weight: 600;
-  color: var(--toros-parchment);
-  transition: color var(--dur) var(--ease);
-}
-.collection:hover .collection-name { color: var(--toros-brass-light); }
-.collection-purpose {
-  display: block;
-  margin-top: 0.2rem;
-  font-size: var(--text-sm);
-  color: var(--toros-sand);
-  opacity: 0.75;
-}
-.collection-count {
-  display: block;
-  margin-top: 0.75rem;
-  font-size: var(--text-label);
-  color: var(--toros-steel);
-}
-
-/* --- Featured, asymmetric ------------------------------------------------ */
-
-.featured { border-top: var(--line-faint); }
-
-.featured-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-sm);
-  margin-bottom: var(--space-lg);
-}
-.featured-all { font-size: var(--text-sm); }
-
-.featured-grid {
-  display: grid;
-  gap: var(--space-md);
-}
-@media (min-width: 900px) {
-  .featured-grid { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: var(--space-lg); }
-}
-
-.featured-rest {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-md);
-  align-content: start;
-}
-
 /* --- Product card -------------------------------------------------------- */
 
 .pcard { display: block; }
@@ -2499,81 +2407,6 @@ body::after {
   color: var(--toros-brass-light);
   font-variant-numeric: lining-nums tabular-nums;
 }
-
-/* --- Maker --------------------------------------------------------------- */
-
-.maker { border-top: var(--line-faint); }
-.maker-figure { margin: 0; }
-.maker-img { object-position: 50% 32%; }
-.maker-caption {
-  margin-top: 0.6rem;
-  font-size: var(--text-sm);
-  color: var(--toros-steel);
-}
-.maker-heading { margin-top: 0.5rem; }
-.maker-copy { margin-top: var(--space-sm); }
-.maker-link { display: inline-block; margin-top: var(--space-md); font-size: var(--text-sm); }
-
-/* --- Jellybean drop ------------------------------------------------------ */
-
-.drop {
-  position: relative;
-  overflow: hidden;
-  padding-block: var(--space-2xl);
-  border-top: var(--line-faint);
-  background:
-    radial-gradient(ellipse 70% 60% at 78% 40%, rgba(63, 155, 181, 0.10), transparent 62%),
-    radial-gradient(ellipse 55% 50% at 10% 90%, rgba(168, 137, 74, 0.07), transparent 60%),
-    var(--toros-charcoal);
-}
-
-.drop-heading { margin-top: 0.5rem; }
-.drop-lead { margin-top: var(--space-md); }
-.drop-actions {
-  margin-top: var(--space-lg);
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-sm);
-}
-
-/* Three real cutouts, hung at different depths. No floating, no looping. */
-.drop-visual {
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  gap: clamp(0.5rem, 3vw, 2.5rem);
-  min-height: 22rem;
-}
-.drop-knife { flex: 0 1 auto; }
-.drop-knife[data-slot="0"] { transform: translateY(-1.5rem) rotate(-7deg); }
-.drop-knife[data-slot="1"] { transform: translateY(1rem) rotate(3deg); }
-.drop-knife[data-slot="2"] { transform: translateY(-3rem) rotate(9deg); }
-
-.drop-knife-img {
-  width: auto;
-  height: auto;
-  max-height: clamp(14rem, 34vw, 24rem);
-  max-width: 100%;
-  object-fit: contain;
-  filter: drop-shadow(0 24px 26px rgba(0, 0, 0, 0.6));
-}
-
-@media (max-width: 899px) {
-  .drop-visual { min-height: 0; margin-top: var(--space-lg); }
-  .drop-knife-img { max-height: clamp(11rem, 40vw, 18rem); }
-}
-
-/* --- Newsletter close ---------------------------------------------------- */
-
-.close {
-  padding-block: var(--space-xl);
-  border-top: var(--line-faint);
-}
-.close-note { margin-top: 0.5rem; max-width: 46ch; }
-.close-form { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-.close-form .field { flex: 1 1 14rem; }
-.close-success { color: var(--toros-brass-light); }
 
 /* ==========================================================================
    Header
@@ -3338,4 +3171,220 @@ body::after {
 .inspect-spin { max-height: min(60svh, 34rem); }
 @media (max-width: 899px) {
   .inspect-spin { max-height: 30svh; }
+}
+
+/* ==========================================================================
+   Homepage — hero handoff and the category experience
+   ========================================================================== */
+
+/* The hero sticks while the catalogue slides up over it. No wheel handler and
+   no snapping: this is ordinary sticky positioning, so native scrolling,
+   Page Down and scrollbar dragging behave exactly as they always do. */
+.hero-stage-outer {
+  position: relative;
+  z-index: 0;
+}
+
+.hero-stage-sticky {
+  position: sticky;
+  top: 0;
+  transform-origin: 50% 40%;
+  will-change: transform;
+}
+
+.hero-handoff-dim {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+  background: var(--toros-black);
+}
+
+.hero-scroll-cue {
+  position: absolute;
+  left: 50%;
+  bottom: 1.1rem;
+  transform: translateX(-50%);
+  z-index: 21;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: var(--text-label);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--toros-steel);
+  pointer-events: none;
+}
+.hero-scroll-cue-line {
+  width: 1px;
+  height: 1.6rem;
+  background: linear-gradient(180deg, var(--toros-brass), transparent);
+}
+@media (max-height: 700px) { .hero-scroll-cue { display: none; } }
+
+/* --- The category experience --------------------------------------------- */
+
+.cat {
+  position: relative;
+  z-index: 1;
+  /* Opaque, because it slides over the sticky hero. */
+  background: var(--toros-black);
+  border-top: var(--line-faint);
+  padding-block: var(--space-2xl) var(--space-xl);
+}
+
+.cat-head { max-width: 46rem; }
+.cat-lead { margin-top: var(--space-sm); }
+
+/* --- The rail ------------------------------------------------------------ */
+
+.cat-rail {
+  --rail-duration: 42s;
+  position: relative;
+  margin-top: var(--space-xl);
+  overflow: hidden;
+  /* Items enter and leave rather than being cut off at the edge. Kept tight —
+     a wider fade reaches past the card's edge and dims its text. */
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 3.5%, #000 96.5%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 3.5%, #000 96.5%, transparent);
+}
+
+.cat-track {
+  display: flex;
+  gap: var(--space-sm);
+  width: max-content;
+  animation: cat-scroll var(--rail-duration) linear infinite;
+}
+
+/* Exactly one set, which is half the track — so the frame it resets on is
+   identical to the frame before it and the seam is invisible. */
+@keyframes cat-scroll {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(-50%, 0, 0); }
+}
+
+/* Under a pointer, a held finger, or keyboard focus, the rail stops so it can
+   actually be read and clicked. */
+.cat-rail:hover .cat-track,
+.cat-rail:focus-within .cat-track,
+.cat-rail:active .cat-track {
+  animation-play-state: paused;
+}
+
+.cat-item { flex: 0 0 auto; list-style: none; }
+
+.cat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  width: clamp(15rem, 22vw, 19rem);
+  min-height: 11rem;
+  padding: var(--space-md);
+  border: var(--line);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(168deg, var(--toros-elevated), var(--toros-charcoal));
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--dur) var(--ease), background-color var(--dur) var(--ease),
+    transform var(--dur) var(--ease);
+}
+.cat-card:hover { border-color: color-mix(in srgb, var(--toros-brass) 45%, transparent); }
+.cat-card[data-active] {
+  border-color: var(--toros-brass);
+  background: linear-gradient(168deg, var(--toros-surface), var(--toros-charcoal));
+}
+
+.cat-card-name {
+  font-family: var(--font-display), Georgia, serif;
+  font-size: var(--text-h3);
+  font-weight: 600;
+  line-height: 1.15;
+  color: var(--toros-parchment);
+}
+.cat-card-desc {
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: var(--toros-steel);
+}
+.cat-card-foot {
+  margin-top: auto;
+  padding-top: var(--space-xs);
+  width: 100%;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  border-top: var(--line-faint);
+}
+.cat-card-count { font-size: var(--text-sm); color: var(--toros-sand); }
+.cat-card-cue {
+  font-size: var(--text-label);
+  color: var(--toros-brass);
+}
+
+/* Reduced motion: no travel at all. It becomes an ordinary row you scroll. */
+@media (prefers-reduced-motion: reduce) {
+  .cat-track { animation: none; }
+  .cat-rail {
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+  .cat-item { scroll-snap-align: start; }
+}
+.cat-rail[data-reduced] .cat-track { animation: none; }
+.cat-rail[data-reduced] {
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  -webkit-mask-image: none;
+  mask-image: none;
+  padding-inline: var(--gutter);
+}
+.cat-rail[data-reduced] .cat-item { scroll-snap-align: start; }
+
+/* --- The expansion ------------------------------------------------------- */
+
+.cat-panel-wrap { position: relative; }
+.cat-panel { overflow: hidden; }
+.cat-panel-inner { padding-top: var(--space-xl); }
+
+.cat-panel-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding-bottom: var(--space-md);
+  border-bottom: var(--line-faint);
+}
+.cat-panel-desc { margin-top: 0.3rem; max-width: 44ch; }
+.cat-panel-all { font-size: var(--text-sm); }
+
+.cat-panel-grid {
+  margin-top: var(--space-lg);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-md) var(--space-sm);
+}
+@media (min-width: 768px) {
+  .cat-panel-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-lg) var(--space-md); }
+}
+@media (min-width: 1280px) {
+  .cat-panel-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+/* --- Footer newsletter --------------------------------------------------- */
+
+.footer-news { grid-column: 1 / -1; }
+@media (min-width: 640px) { .footer-news { grid-column: auto; } }
+.footer-news-note { margin-top: var(--space-xs); max-width: 30ch; }
+.footer-news-form { margin-top: var(--space-sm); display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.footer-news-form .field { flex: 1 1 10rem; min-height: 2.5rem; }
+.footer-news-done { margin-top: var(--space-xs); color: var(--toros-brass-light); font-size: var(--text-sm); }
+
+@media (min-width: 640px) {
+  .footer-links { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
