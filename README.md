@@ -58,8 +58,13 @@ npm install
 npm run dev
 ```
 
-Open [http://127.0.0.1:3004](http://127.0.0.1:3004) — `dev` uses port **3004**,
-not 3000.
+Open the URL the server prints as **Local** — normally
+[http://localhost:3004](http://localhost:3004). `dev` uses port **3004**, not
+3000. If `localhost` does not load, [http://127.0.0.1:3004](http://127.0.0.1:3004)
+works regardless of how `localhost` resolves.
+
+Windows steps, live reload and troubleshooting are in
+[docs/running-locally.md](docs/running-locally.md).
 
 ```bash
 npm run lint       # eslint
