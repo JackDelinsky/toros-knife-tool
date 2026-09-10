@@ -13,11 +13,20 @@ Then open the URL the server prints as **Local** — normally
 
 ## Windows (PowerShell)
 
-Paste this as one block, replacing the path on the first line with wherever
-you cloned the repo:
+Paste this whole block. It finds the repo wherever it already is, clones it if
+there is none yet, and starts the server — so there is no path to fill in and
+nothing to get wrong:
 
 ```powershell
-cd C:\path\to\toros-knife-tool
+$repo = Get-ChildItem $HOME -Filter toros-knife-tool -Directory -Recurse -Depth 4 -ErrorAction SilentlyContinue |
+        Select-Object -First 1 -ExpandProperty FullName
+if (-not $repo) {
+  Set-Location "$HOME\Documents"
+  git clone https://github.com/JackDelinsky/toros-knife-tool.git
+  $repo = "$HOME\Documents\toros-knife-tool"
+}
+Set-Location $repo
+"Using: $repo"
 git fetch origin
 git checkout claude/toros-knife-repo-review-30n7f6
 git pull
@@ -25,9 +34,18 @@ npm install
 npm run dev
 ```
 
-The path is a placeholder. `cd path\to\toros-knife-tool` typed literally will
-fail with `Cannot find path`; use the real folder, e.g.
-`cd $HOME\Documents\GitHub\toros-knife-tool`.
+It prints the folder it chose, so you can tell whether it found an existing
+clone or made a new one.
+
+**Run it from the project folder, not from `C:\Users\<you>`.** Both `git` and
+`npm` act on the current directory and neither one goes looking: in a home
+folder they report `not a git repository` and `Could not read package.json`,
+which is what "the commands do not work" almost always turns out to be. The
+block above handles that by moving you there first.
+
+**Restart the server after pulling.** `next.config.ts` and `package.json` are
+only read at startup, so a running server will not pick up changes to either
+— and one of them carries the setting that lets the page become interactive.
 
 `npm run dev:reset` is a bash script and will not run in PowerShell. The
 equivalent there is:
