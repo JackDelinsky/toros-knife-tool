@@ -160,10 +160,10 @@ def main() -> None:
     print(f"\nwrote {len(cut)} frames to {out_dir}")
     print(f"  {args.width}x{height}, {total / 1024:.0f} KB total, "
           f"{total / len(cut) / 1024:.1f} KB per frame")
-    print("\nAdd to components/home/hero/hero-knives.ts on this knife's entry:\n")
+    print("\nAdd to lib/product-media.ts on this product's entry:\n")
+    print('    mode: "spin",')
     print(f'    spin: {{ dir: "/images/spin/{args.slug}", frames: {len(cut)}, '
-          f'width: {args.width}, height: {height}, arc: 360, '
-          f'source: "photographed" }},')
+          f'width: {args.width}, height: {height}, arc: 360 }},')
     print("\n`arc: 360` is what makes the viewer wrap instead of clamp — that is"
           "\nthe switch from an inspection sweep to a real turn.")
 

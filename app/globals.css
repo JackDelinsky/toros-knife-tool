@@ -1926,6 +1926,19 @@ body::after {
   pointer-events: auto;
 }
 
+/* The carousel's swipe surface: the whole stage, behind every knife. */
+.hero-swipe {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  cursor: grab;
+  touch-action: pan-y;
+}
+.hero-swipe:active { cursor: grabbing; }
+@media (prefers-reduced-motion: reduce) {
+  .hero-swipe { cursor: default; }
+}
+
 /* Neighbours take pointer events too, so a visitor can point at the knife they
    want. They sit below the active slide, so the overlap belongs to whatever is
    centre stage and only their outer part selects. */

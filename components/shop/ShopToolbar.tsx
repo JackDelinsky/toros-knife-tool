@@ -41,7 +41,10 @@ export function ShopToolbar({ options, filters, resultCount }: ShopToolbarProps)
       // A filter change is a new result set, not a new position in the old one.
       next.delete("look");
       const query = next.toString();
-      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+      // push, not replace: changing a filter is somewhere you have been, and
+      // Back is how people undo one. Replacing skipped the whole filtered
+      // state and dropped you off the shop entirely.
+      router.push(query ? `${pathname}?${query}` : pathname, { scroll: false });
     },
     [params, pathname, router],
   );
@@ -51,7 +54,7 @@ export function ShopToolbar({ options, filters, resultCount }: ShopToolbarProps)
     const sort = params.get("sort");
     if (sort) next.set("sort", sort);
     const query = next.toString();
-    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    router.push(query ? `${pathname}?${query}` : pathname, { scroll: false });
   }, [params, pathname, router]);
 
   // The sheet is a layer over the page, so the page behind it must not scroll.

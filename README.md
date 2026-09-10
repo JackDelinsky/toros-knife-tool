@@ -73,6 +73,13 @@ npm run build      # production build
 npm run start      # serve the production build
 ```
 
+## What the catalogue is still missing
+
+`docs/toros-product-data-gaps.md` is generated from the records themselves and
+lists, per product, the missing blade and handle fields, which photographs
+would upgrade its viewer, and whether its anatomy can separate. Missing values
+are omitted from the site rather than shown as "N/A" or guessed.
+
 ## Project structure
 
 ```
@@ -165,7 +172,7 @@ No product has frames yet, so every knife shows its static cutout as before. To
 try the viewer, open the site with `?spin=rig-test` — that swaps in a rendered
 calibration target (deliberately not a knife) in both places.
 
-`docs/360-capture-guide.md` is the shoot: a lazy Susan, a locked-down camera,
+`docs/toros-360-capture-guide.md` is the shoot: a lazy Susan, a locked-down camera,
 36 frames 10° apart. Then:
 
 ```bash
@@ -265,7 +272,7 @@ that knife's own materials.
   has not been guessed at — `docs/hero-product-audit.md`.
 - The hero knives turn on *derived* relief, not photographed angles. The arc is
   capped and the far side is never shown. A turntable shoot replaces it —
-  `docs/360-capture-guide.md`.
+  `docs/toros-360-capture-guide.md`.
 - No checkout, authentication, or email backend.
 
 ## License

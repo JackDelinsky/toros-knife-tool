@@ -59,7 +59,6 @@ function slidePose(offset: number, flat: boolean) {
 const STEP_LOCK_MS = 340;
 const DRAG_DISTANCE = 70;
 const DRAG_VELOCITY = 320;
-const TAP_SLOP = 6;
 /** Slides kept mounted either side of centre: one visible, one warming up. */
 const MOUNT_RADIUS = 2;
 
@@ -76,8 +75,6 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
   const [handled, setHandled] = useState(false);
 
   const lockedUntil = useRef(0);
-  const dragStartX = useRef(0);
-  const dragged = useRef(false);
 
   const knife = knives[active];
   const { presentation, product } = knife;
@@ -115,15 +112,6 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
     [step],
   );
 
-  const handleDragStart = useCallback((_: unknown, info: PanInfo) => {
-    dragStartX.current = info.point.x;
-    dragged.current = false;
-  }, []);
-
-  const handleDrag = useCallback((_: unknown, info: PanInfo) => {
-    if (Math.abs(info.point.x - dragStartX.current) > TAP_SLOP) dragged.current = true;
-  }, []);
-
   const handleDragEnd = useCallback(
     (_: unknown, info: PanInfo) => {
       const { offset, velocity } = info;
@@ -133,8 +121,11 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
     [step],
   );
 
+  // No drag guard here. A drag on the knife is resolved inside the viewer,
+  // which only reports a tap when the pointer did not move; a drag on the
+  // stage never calls this at all. Gating on a "did we just drag" ref meant
+  // one drag disabled the button until the next drag started.
   const openInspection = useCallback(() => {
-    if (dragged.current) return; // released a drag, not a tap
     inspect?.open(product.slug);
   }, [inspect, product.slug]);
 
@@ -208,16 +199,23 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
         </div>
 
         {/* Centre — the stage */}
-        <motion.div
-          className="hero-stage"
-          drag="x"
-          dragDirectionLock
-          dragConstraints={{ left: 0, right: 0 }}
-          dragElastic={0.12}
-          onDragStart={handleDragStart}
-          onDrag={handleDrag}
-          onDragEnd={handleDragEnd}
-        >
+        <div className="hero-stage">
+          {/* The carousel's swipe lives on its own layer *behind* the knives,
+              not on their container. Framer binds a native listener to the
+              element it drags, and a native listener on an ancestor fires
+              before React's delegated handlers — so a child calling
+              stopPropagation cannot stop it, and every drag on the knife
+              turned into "next knife". Separate layers need no arbitration:
+              the knife takes what lands on the knife, this takes the rest. */}
+          <motion.div
+            className="hero-swipe"
+            drag="x"
+            dragDirectionLock
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.12}
+            onDragEnd={handleDragEnd}
+            aria-hidden="true"
+          />
           {knives.map((entry, index) => {
             const offset = relativeOffset(index, active, length);
             const isActive = offset === 0;
@@ -261,14 +259,9 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
                 {isActive ? (
                   <div
                     className="hero-handle"
-                    // Pointer events that start on the knife belong to the
-                    // knife. Stopping them here is what keeps a drag from
-                    // being read as "turn this" and "next knife" at once —
-                    // the carousel's own drag lives on the stage behind.
-                    onPointerDown={(event) => {
-                      event.stopPropagation();
-                      setHandled(true);
-                    }}
+                    // Purely to shorten the cue once the visitor has moved a
+                    // knife; the gesture itself is the viewer's business.
+                    onPointerDown={() => setHandled(true)}
                   >
                     <ProductViewer
                       media={media}
@@ -306,7 +299,7 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
           })}
 
           <div className="hero-contact-shadow" aria-hidden="true" />
-        </motion.div>
+        </div>
 
         {/* Right — price, two facts, the actions */}
         <div className="hero-col hero-col--buy">

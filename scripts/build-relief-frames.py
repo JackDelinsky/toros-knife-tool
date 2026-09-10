@@ -20,7 +20,7 @@ What this is not:
   thing added is where those pixels sit in depth.
 
 A real turntable shoot replaces this entirely and should — see
-docs/360-capture-guide.md. This exists so the knives feel solid in the meantime,
+docs/toros-360-capture-guide.md. This exists so the knives feel solid in the meantime,
 without putting a product on the site that nobody made.
 """
 import sys

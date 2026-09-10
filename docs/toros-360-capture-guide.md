@@ -44,12 +44,43 @@ If the first try comes out uneven, turn more slowly and go again — it is a
 
 ## What the shoot has to produce
 
+Two things belong in every set and are almost always forgotten:
+
+- **One reference frame** with a grey card and a colour checker in the same
+  light, shot before the knife. Without it there is nothing to correct against
+  later, and antler and micarta are exactly the materials that go wrong.
+- **The measurements**, written down at the rig: blade length, overall length,
+  blade stock thickness, handle length, weight. Most of these are missing from
+  the catalogue right now — `docs/toros-product-data-gaps.md` lists which — and
+  the shoot is the one moment the knife is in someone's hands with a ruler
+  nearby.
+
+Handle the knife with the whole silhouette clear: no clamp across the blade, no
+fingers in frame, no stand that hides the pommel. A support that occludes any
+part of the outline masks badly and shows up as a bite taken out of the
+silhouette in every frame it appears in.
+
+Shoot from the camera's own files. A picture pulled off Instagram or out of a
+message thread has already been recompressed and resized, and it is the reason
+the current catalogue looks the way it does.
+
 | | Minimum | Good | Why |
 |---|---|---|---|
 | Frames per knife | 24 (15° apart) | **36 (10°)** | Under 24 the rotation visibly steps. Past 48 the file weight stops paying for itself. |
 | Long side | 2000 px | **3000 px** | The viewer ships frames at ~1100 px; shooting at 3000 leaves room to crop. |
 | Format | max-quality JPEG | RAW | Same reason as every other photo here. |
 | Weight, processed | — | ~25–40 KB/frame | 36 frames lands near 1.2 MB, loaded only when someone opens the closer look. |
+
+## Optional: more than one ring
+
+The viewer supports a second ring of frames shot from a different camera
+height, which lets someone look slightly down the spine as well as around the
+knife. It is genuinely optional and worth doing only after one knife's
+horizontal ring is in and looks right.
+
+If you do it: shoot the whole sequence again with the camera raised to about
+30° above the knife, changing nothing else, and keep it as a separate ring.
+Never mix elevations inside one ring — the knife appears to bob.
 
 ## The deliberate way: individual frames
 
@@ -98,25 +129,28 @@ python3 scripts/build-spin-frames.py gur-tombik ~/shoots/tombik-turntable
 
 It masks each frame, crops all of them to one shared box so the knife stays
 pinned in place, resizes, and writes
-`public/images/spin/gur-tombik/frame-000.webp` upward. It prints the exact line
-to paste into `components/home/hero/hero-knives.ts`:
+`public/images/spin/gur-tombik/frame-000.webp` upward. It prints the exact entry to paste into `lib/product-media.ts`, on the
+product's record:
 
 ```ts
+mode: "spin",
 spin: { dir: "/images/spin/gur-tombik", frames: 36, width: 1100, height: 820,
-        arc: 360, source: "photographed" },
+        arc: 360 },
 ```
 
-`arc: 360` is the switch. Below 360 the viewer clamps at both ends — that is the
-derived inspection sweep the site ships today. At 360 it wraps, and the knife
-turns all the way round, forever, in either direction. Nothing else changes. Nothing else has to change; a knife without a
-`spin` entry keeps working exactly as it does now.
+`mode: "spin"` is the switch, and it is the only thing in the codebase that
+lets a product call itself a rotation. A `spin` is photographed by definition;
+the derived sweep the site ships today lives under `single.relief`, is labelled
+"tilt", and clamps at both ends. Nothing else has to change: a product without
+a `spin` entry keeps working exactly as it does now.
 
 ## What you have today, and what this replaces
 
-Right now all seven knives use a **derived** sweep: `scripts/build-relief-frames.py`
+Right now seven knives use a **derived** sweep: `scripts/build-relief-frames.py`
 estimates thickness from each cutout's silhouette and re-projects the single
 product photograph across 90 degrees. Real pixels, real parallax, but a quarter
-turn and no far side.
+turn and no far side. The other eleven have no movement at all beyond a
+restrained tilt of the flat photograph.
 
 A video replaces that with the real thing for whichever knife you shoot. The two
 can coexist — one knife on real frames, the rest on derived — because `arc` is
@@ -145,3 +179,49 @@ documented in `docs/product-photo-reshoot-list.md` and is the larger quality
 problem. A 360 view of a knife whose card photo is a crop from a phone
 screenshot of a website is an odd pairing — if the choice is one or the other,
 reshoot the stills first.
+
+## The other option: photogrammetry and a real 3D model
+
+The viewer has a `model` mode. Nothing uses it, and nothing should until a
+model exists that was measured rather than sculpted. A sculpted knife is an
+object nobody made, and it would invent exactly the things a buyer is looking
+at: the grind, the tang, the pin placement, the hammer marks.
+
+Photogrammetry is the honest route to one, and it is hard on this subject for
+the reason given at the top: a mirror-polished blade has no stable features to
+match, because its features are reflections and reflections move with the
+camera. It is worth attempting only with the right equipment and someone who
+has done it before.
+
+What it takes:
+
+- **Dense overlapping coverage of the whole knife** — both handle sides, the
+  spine, the pommel, the guard and both blade faces — not a single orbit.
+  Neighbouring frames should overlap by about two thirds.
+- **Cross-polarised lighting** (polarising film on the lights, a rotatable
+  polariser on the lens) to kill the specular reflections that defeat matching
+  on steel. Without this step, expect the blade to reconstruct as a
+  cratered mess even when the handle comes out perfectly.
+- **Real measurements** taken at the same session, used afterwards to scale the
+  mesh. A model at the wrong scale is worse than no model.
+- **Mesh cleanup that preserves geometry and markings.** Decimation that
+  smooths the maker's mark, the hammer texture or the grind line off the blade
+  has removed the product. If a step cannot be done without losing those, stop
+  and ship the turntable instead.
+- **PBR materials checked against the real knife**, side by side, in daylight.
+  Steel roughness is the one people get wrong.
+- **Web delivery as a compressed GLB** with a poster image and the still frames
+  kept as a fallback, lazy-loaded only when someone opens the viewer. It must
+  not be in the initial page load for products that do not use it.
+- **The maker's approval before it is published.** It is their work being
+  represented by something they did not make with their hands.
+
+Then set `mode: "model"` on that product in `lib/product-media.ts`, with the
+named blade and handle meshes if the model separates — Anatomy will use them
+instead of the clipped photograph. A folding knife could eventually separate
+into blade, scales, liners, pivot, lock and clip, but only for a model where
+those parts are genuinely modelled. One generic exploded structure applied to
+every knife type would be a diagram of nothing.
+
+Adding a model means adding a WebGL viewer dependency, which is why none is in
+the project today. Do not add one before the asset exists.
