@@ -1881,13 +1881,10 @@ body::after {
   place-items: center;
   max-width: 100%;
 }
-/* The cutout is a transparent PNG whose box is far wider and taller than the
-   knife, so a normal outline draws a big rectangle in empty space — which is
-   what appeared after closing the closer look. Instead the focus state follows
-   the knife's own silhouette and names itself, so it is unmistakable without
-   boxing the product. */
+/* The cutout is a transparent PNG whose box is far wider than the knife, so a
+   normal outline draws a big rectangle in empty space. The focus state follows
+   the knife's own silhouette instead. */
 .hero-slide-button:focus-visible { outline: none; }
-
 .hero-slide-button:focus-visible .hero-knife-img {
   filter:
     drop-shadow(0 30px 26px rgba(0, 0, 0, 0.7))
@@ -1895,23 +1892,6 @@ body::after {
     drop-shadow(0 0 6px var(--toros-brass))
     drop-shadow(0 0 18px color-mix(in srgb, var(--toros-brass) 60%, transparent));
 }
-
-.hero-focus-hint {
-  position: absolute;
-  left: 50%;
-  bottom: -0.25rem;
-  transform: translateX(-50%);
-  padding: 0.35rem 0.8rem;
-  border: 1px solid var(--toros-brass);
-  border-radius: var(--radius-pill);
-  background: var(--toros-black);
-  color: var(--toros-parchment);
-  font-size: var(--text-label);
-  white-space: nowrap;
-  opacity: 0;
-  pointer-events: none;
-}
-.hero-slide-button:focus-visible .hero-focus-hint { opacity: 1; }
 
 .hero-knife-wrap { display: grid; place-items: center; }
 
@@ -1936,39 +1916,15 @@ body::after {
   }
 }
 
-/* Deterministic navigation targets over the outer thirds of the stage. The
-   active cutout is a transparent PNG whose box is far wider than the knife, so
-   hit-testing must not depend on it. */
-.hero-side-zone {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 30%;
-  z-index: 4;
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-}
-.hero-side-zone--prev { left: 0; }
-.hero-side-zone--next { right: 0; }
-.hero-side-zone:focus-visible { outline-offset: -8px; }
-
-/* The active knife stays above the zones so its centre still opens inspection.
-   `pointer-events` has to be re-enabled explicitly: the slide box above turns
-   them off for the whole stage, and children inherit that. */
-.hero-slide[data-role="active"] .hero-slide-button,
-.hero-slide[data-role="active"] .spin-wrap {
+/* Pointer events are re-enabled explicitly on the knife itself: the slide box
+   above turns them off for the whole stage so taps fall through to the
+   neighbours, and children inherit that. The active knife is the viewer, and
+   it takes its own drags. */
+.hero-slide[data-role="active"] .hero-handle {
   position: relative;
   z-index: 5;
   pointer-events: auto;
 }
-
-/* Without this the turntable sits *under* the navigation zones, which cover the
-   outer third on each side — so a drag that began anywhere but the middle of
-   the stage went to "previous knife" instead of turning the knife, and the
-   rotation looked stuck. The knife itself now takes the drag; the stage either
-   side of it still navigates. */
-.hero-slide[data-role="active"] .spin-wrap .spin { pointer-events: auto; }
 
 /* Neighbours take pointer events too, so a visitor can point at the knife they
    want. They sit below the active slide, so the overlap belongs to whatever is
@@ -2116,10 +2072,10 @@ body::after {
 }
 
 /* ==========================================================================
-   Closer look — the same world, stepped into
+   Quick inspect — the same world, stepped into
    ========================================================================== */
 
-.inspect {
+.qi {
   position: fixed;
   inset: 0;
   z-index: 120;
@@ -2128,18 +2084,18 @@ body::after {
   isolation: isolate;
 }
 
-.inspect-scene { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
-.inspect-scene-img { object-fit: cover; }
+.qi-scene { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
+.qi-scene-img { object-fit: cover; }
 /* Nearer than the hero: the middle ground is pushed down and enlarged so the
    step feels like walking forward rather than opening a window. */
-.inspect-scene-mid {
+.qi-scene-mid {
   position: absolute;
   inset-inline: -10%;
   bottom: -12%;
   height: 92%;
   opacity: 0.9;
 }
-.inspect-scene-key {
+.qi-scene-key {
   position: absolute;
   inset: 0;
   background:
@@ -2149,7 +2105,7 @@ body::after {
       rgba(6, 6, 5, 0.72) 78%, rgba(6, 6, 5, 0.94) 100%);
 }
 
-.inspect-dismiss {
+.qi-dismiss {
   position: absolute;
   inset: 0;
   z-index: 1;
@@ -2159,7 +2115,7 @@ body::after {
 }
 
 /* 88% of the viewport, with the escape controls always outside the content. */
-.inspect-body {
+.qi-body {
   position: relative;
   z-index: 2;
   width: min(94vw, 82rem);
@@ -2176,17 +2132,20 @@ body::after {
 }
 
 @media (min-width: 900px) {
-  .inspect-body {
+  .qi-body {
     grid-template-rows: none;
-    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
-    align-items: center;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+    /* Stretch, not centre: the detail column now holds tabs and a whole
+       anatomy section, so it has to own a definite height to scroll inside
+       rather than running off the bottom of the dialog. */
+    align-items: stretch;
     gap: clamp(2rem, 4vw, 4rem);
-    padding: var(--space-lg) var(--space-lg);
-    overflow: visible;
+    padding: var(--space-lg);
+    overflow: hidden;
   }
 }
 
-.inspect-close {
+.qi-close {
   position: absolute;
   top: 0;
   right: 0;
@@ -2203,62 +2162,58 @@ body::after {
   cursor: pointer;
   transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease);
 }
-.inspect-close:hover { color: var(--toros-parchment); border-color: var(--toros-brass); }
-.inspect-close svg { width: 1.25rem; height: 1.25rem; }
+.qi-close:hover { color: var(--toros-parchment); border-color: var(--toros-brass); }
+.qi-close svg { width: 1.25rem; height: 1.25rem; }
 
-.inspect-stage {
+.qi-stage {
   display: grid;
   place-items: center;
   min-height: 0;
+  overflow: hidden;
 }
-.inspect-knife-wrap { display: grid; place-items: center; }
 
-.inspect-knife {
-  width: auto;
-  height: auto;
-  max-height: min(42svh, 24rem);
-  max-width: 100%;
-  object-fit: contain;
-  filter:
-    drop-shadow(0 34px 40px rgba(0, 0, 0, 0.72))
-    drop-shadow(0 0 46px color-mix(in srgb, var(--knife-accent) 26%, transparent));
-}
+.qi-detail { min-width: 0; }
+
 @media (min-width: 900px) {
-  .inspect-knife { max-height: min(68svh, 40rem); }
+  /* Each column scrolls on its own, so a long specification list never pushes
+     the viewer out of the dialog. */
+  .qi-detail {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    max-height: 100%;
+    padding-right: var(--space-sm);
+  }
 }
+.qi-title { margin-top: 0.4rem; }
 
-.inspect-detail { min-width: 0; }
-.inspect-title { margin-top: 0.4rem; }
-.inspect-copy { margin-top: var(--space-xs); max-width: 46ch; }
-
-.inspect-specs {
+.qi-specs {
   margin-top: var(--space-md);
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.75rem var(--space-md);
   max-width: 28rem;
 }
-.inspect-spec { border-top: var(--line-faint); padding-top: 0.5rem; }
-.inspect-spec dt { font-size: var(--text-label); color: var(--toros-steel); }
-.inspect-spec dd { margin-top: 0.15rem; font-size: var(--text-sm); color: var(--toros-parchment); }
+.qi-spec { border-top: var(--line-faint); padding-top: 0.5rem; }
+.qi-spec dt { font-size: var(--text-label); color: var(--toros-steel); }
+.qi-spec dd { margin-top: 0.15rem; font-size: var(--text-sm); color: var(--toros-parchment); }
 
-.inspect-meta {
+.qi-meta {
   margin-top: var(--space-md);
   display: flex;
   align-items: baseline;
   gap: var(--space-sm);
 }
-.inspect-stock { font-size: var(--text-sm); color: var(--toros-sand); }
-.inspect-stock--out { color: #c98787; }
+.qi-stock { font-size: var(--text-sm); color: var(--toros-sand); }
+.qi-stock--out { color: #c98787; }
 
-.inspect-actions {
+.qi-actions {
   margin-top: var(--space-sm);
   display: flex;
   flex-wrap: wrap;
   gap: 0.6rem;
 }
 
-.inspect-note {
+.qi-note {
   margin-top: var(--space-md);
   font-size: var(--text-sm);
   color: var(--toros-steel);
@@ -2266,7 +2221,7 @@ body::after {
 }
 
 @media (max-width: 899px) {
-  .inspect-body {
+  .qi-body {
     width: 100vw;
     /* min-height, not height: a definite height let the grid shrink the stage
        row below its content instead of letting the panel scroll. */
@@ -2274,16 +2229,15 @@ body::after {
     min-height: 100svh;
     padding-top: var(--space-lg);
   }
-  .inspect-close { top: var(--space-xs); right: var(--space-xs); }
-  .inspect-knife { max-height: 34svh; }
-  .inspect-body { row-gap: var(--space-md); }
-  .inspect-specs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .qi-close { top: var(--space-xs); right: var(--space-xs); }
+    .qi-body { row-gap: var(--space-md); }
+  .qi-specs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .hero-slide { transition: none !important; }
   .hero-stage { cursor: default; }
-  .inspect-close { backdrop-filter: none; }
+  .qi-close { backdrop-filter: none; }
 }
 
 /* ==========================================================================
@@ -2717,27 +2671,6 @@ body::after {
   }
 }
 
-.gallery-stage { background: var(--toros-charcoal); }
-.gallery-img { object-fit: cover; }
-
-.gallery-thumbs {
-  margin-top: var(--space-xs);
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-.gallery-thumb {
-  width: 4.5rem;
-  padding: 0;
-  border: 1px solid transparent;
-  border-radius: var(--radius-sm);
-  background: none;
-  cursor: pointer;
-  overflow: hidden;
-}
-.gallery-thumb[aria-current="true"] { border-color: var(--toros-brass); }
-.gallery-thumb-img { object-fit: cover; }
-
 /* Purchase column: on a tall desktop it follows you down the page. */
 @media (min-width: 900px) {
   .buy { position: sticky; top: 5.5rem; }
@@ -3072,108 +3005,6 @@ body::after {
 }
 
 /* ==========================================================================
-   Turntable viewer
-   ========================================================================== */
-
-.spin {
-  position: relative;
-  width: 100%;
-  min-height: 0;
-  max-width: min(100%, 34rem);
-  max-height: min(68svh, 40rem);
-  display: grid;
-  place-items: center;
-  /* Horizontal drags turn the knife; vertical ones still scroll the page. */
-  touch-action: pan-y;
-  cursor: grab;
-  user-select: none;
-  -webkit-user-select: none;
-}
-.spin[data-dragging] { cursor: grabbing; }
-.spin:not([data-ready]) { cursor: progress; }
-
-.spin-frame {
-  /* Sized by its own limits rather than filling the box. A grid item with
-     width/height 100% keeps the height its aspect-ratio implies even after
-     max-height clamps the container, so on short viewports the frame spilled
-     out of the stage and over the description beside it. */
-  max-width: 100%;
-  max-height: 100%;
-  width: auto;
-  height: auto;
-  min-width: 0;
-  min-height: 0;
-  object-fit: contain;
-  pointer-events: none;
-  filter:
-    drop-shadow(0 34px 40px rgba(0, 0, 0, 0.72))
-    drop-shadow(0 0 46px color-mix(in srgb, var(--knife-accent) 26%, transparent));
-}
-
-/* The affordance is always present, not revealed on hover — it just steps back
-   once the visitor has started turning the knife. */
-/* Frame and its label as one column, so the label occupies real space. */
-.spin-wrap {
-  display: grid;
-  justify-items: center;
-  align-content: center;
-  gap: 0.6rem;
-  min-height: 0;
-  width: 100%;
-}
-
-.spin-hint,
-.spin-loading {
-  padding: 0.3rem 0.8rem;
-  border: var(--line);
-  border-radius: var(--radius-pill);
-  background: color-mix(in srgb, var(--toros-black) 72%, transparent);
-  backdrop-filter: blur(6px);
-  font-size: var(--text-label);
-  color: var(--toros-sand);
-  white-space: nowrap;
-  transition: opacity var(--dur) var(--ease);
-}
-.spin[data-dragging] .spin-hint { opacity: 0.25; }
-
-@media (prefers-reduced-motion: reduce) {
-  .spin-hint { transition: none; }
-}
-
-@media (max-width: 899px) {
-  .spin { max-height: 40svh; }
-}
-
-/* The turntable standing in for the cutout on the hero stage. It matches the
-   static knife's footprint so switching between them does not resize the
-   composition. */
-.hero-spin {
-  pointer-events: auto;
-  max-width: min(74vw, 32rem);
-  max-height: clamp(13rem, 36svh, 20rem);
-}
-@media (min-width: 1024px) {
-  .hero-spin { max-width: min(38vw, 28rem); max-height: clamp(18rem, 47svh, 29rem); }
-}
-@media (max-width: 1023px) {
-  .hero-spin { max-width: 62vw; max-height: clamp(9rem, 22svh, 13rem); }
-}
-@media (max-width: 640px) {
-  .hero-spin { max-width: 58vw; max-height: clamp(8rem, 20svh, 11.5rem); }
-}
-
-/* Rotating in place means the stage no longer swipes between knives, so it
-   should not advertise a grab cursor. */
-.hero-stage[data-spinning] { cursor: default; }
-
-/* Per-context sizing for the viewer. Declared after `.spin` deliberately:
-   these carry the same specificity, so source order is what makes them win. */
-.inspect-spin { max-height: min(60svh, 34rem); }
-@media (max-width: 899px) {
-  .inspect-spin { max-height: 30svh; }
-}
-
-/* ==========================================================================
    Homepage — hero handoff and the category experience
    ========================================================================== */
 
@@ -3417,4 +3248,473 @@ body::after {
   background: var(--toros-black);
   border-top: var(--line-faint);
   padding-block: var(--space-2xl);
+}
+
+/* ==========================================================================
+   Product viewer — one stage, whatever the product's assets support
+   ========================================================================== */
+
+.pv {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 0.6rem;
+  min-height: 0;
+  width: 100%;
+}
+
+.pv-stage {
+  position: relative;
+  width: 100%;
+  min-height: 0;
+  max-width: min(100%, 34rem);
+  max-height: min(68svh, 40rem);
+  display: grid;
+  place-items: center;
+  /* Horizontal drags move the product; vertical ones still scroll the page
+     until the visitor has engaged the viewer. */
+  touch-action: pan-y;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  border-radius: var(--radius-sm);
+}
+.pv-stage[data-dragging] { cursor: grabbing; }
+.pv-stage[data-zoomed] { overflow: hidden; }
+.pv-stage:focus-visible { outline: 2px solid var(--toros-brass); outline-offset: 6px; }
+
+.pv-img {
+  /* Sized by its own limits rather than filling the box: a grid item at
+     width/height 100% keeps the height its aspect-ratio implies even after
+     max-height clamps the container, so on short viewports it spilled out of
+     the stage and over the text beside it. */
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  min-width: 0;
+  min-height: 0;
+  object-fit: contain;
+  pointer-events: none;
+  transform-origin: center;
+  transition: transform 220ms var(--ease);
+  filter:
+    drop-shadow(0 34px 40px rgba(0, 0, 0, 0.72))
+    drop-shadow(0 0 46px color-mix(in srgb, var(--knife-accent, transparent) 26%, transparent));
+}
+.pv-stage[data-dragging] .pv-img { transition: none; }
+
+.pv-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.pv-hint,
+.pv-status {
+  margin: 0;
+  padding: 0.3rem 0.8rem;
+  border: var(--line);
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--toros-black) 72%, transparent);
+  backdrop-filter: blur(6px);
+  font-size: var(--text-label);
+  color: var(--toros-sand);
+  white-space: nowrap;
+  transition: opacity var(--dur) var(--ease);
+}
+.pv-stage[data-dragging] ~ .pv-bar .pv-hint { opacity: 0.25; }
+
+.pv-controls { display: flex; align-items: center; gap: 0.35rem; }
+
+.pv-zoom,
+.pv-reset,
+.pv-preset {
+  min-height: 2rem;
+  padding-inline: 0.7rem;
+  border: var(--line);
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--toros-black) 66%, transparent);
+  color: var(--toros-sand);
+  font-size: var(--text-label);
+  cursor: pointer;
+  transition: border-color var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+.pv-zoom { min-width: 2rem; padding-inline: 0; font-size: 1rem; line-height: 1; }
+.pv-zoom:hover:not(:disabled),
+.pv-reset:hover:not(:disabled),
+.pv-preset:hover { border-color: var(--toros-brass); color: var(--toros-parchment); }
+.pv-zoom:disabled,
+.pv-reset:disabled { opacity: 0.4; cursor: default; }
+.pv-preset[aria-pressed="true"] {
+  background: var(--toros-brass);
+  border-color: var(--toros-brass);
+  color: #0b0906;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pv-img { transition: none; }
+  .pv-hint { transition: none; }
+}
+@media (max-width: 899px) {
+  .pv-stage { max-height: 40svh; }
+}
+
+/* The viewer standing on the hero stage: it matches the cutout's footprint so
+   the composition does not resize between knives. */
+.hero-viewer .pv-stage {
+  max-width: min(74vw, 32rem);
+  max-height: clamp(13rem, 36svh, 20rem);
+}
+@media (min-width: 1024px) {
+  .hero-viewer .pv-stage { max-width: min(38vw, 28rem); max-height: clamp(18rem, 47svh, 29rem); }
+}
+@media (max-width: 1023px) {
+  .hero-viewer .pv-stage { max-width: 62vw; max-height: clamp(9rem, 22svh, 13rem); }
+}
+@media (max-width: 640px) {
+  .hero-viewer .pv-stage { max-width: 58vw; max-height: clamp(8rem, 20svh, 11.5rem); }
+}
+/* On the hero the controls would crowd the composition; the knife is the
+   affordance and the arrows below are the navigation. */
+@media (max-width: 1023px) {
+  .hero-viewer .pv-bar { display: none; }
+}
+
+.qi-viewer .pv-stage { max-height: min(56svh, 32rem); }
+@media (max-width: 899px) {
+  .qi-viewer .pv-stage { max-height: 30svh; }
+}
+
+.pdp-viewer .pv-stage {
+  max-height: min(64svh, 36rem);
+  background: var(--toros-charcoal);
+  padding: var(--space-md);
+}
+
+/* The learn-once cue under the carousel. */
+.hero-cue {
+  font-size: var(--text-label);
+  color: var(--toros-steel);
+  letter-spacing: 0.04em;
+  margin: 0;
+}
+@media (max-width: 640px) {
+  .hero-cue { display: none; }
+}
+
+/* ==========================================================================
+   Anatomy — the same photograph, opened
+   ========================================================================== */
+
+.anat { margin-top: var(--space-xl); }
+
+.anat-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding-bottom: var(--space-sm);
+  border-bottom: var(--line-faint);
+}
+
+.anat-stage {
+  position: relative;
+  width: 100%;
+  max-width: 40rem;
+  /* The two parts travel outside the image box when they separate, so the
+     stage carries the room for that rather than clipping it — a clipped
+     anatomy view cuts the tip off the blade. */
+  margin: var(--space-xl) auto var(--space-lg);
+  padding-block: 6%;
+}
+
+.anat-part {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+.anat-part-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 26px 30px rgba(0, 0, 0, 0.66));
+}
+
+.anat-link {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.anat-link-line {
+  stroke: var(--toros-brass);
+  stroke-width: 0.4;
+  stroke-dasharray: 1.4 1.4;
+  opacity: 0;
+  transition: opacity var(--dur) var(--ease);
+}
+.anat-stage[data-apart] .anat-link-line { opacity: 0.7; }
+
+.anat-whole { margin: var(--space-lg) 0 0; }
+.anat-whole-img {
+  width: auto;
+  max-width: 100%;
+  /* The source photographs are tall 3:4 portraits. Left unbounded, one filled
+     the whole panel and pushed everything else out of sight. */
+  max-height: min(46svh, 26rem);
+  height: auto;
+  border-radius: var(--radius-sm);
+}
+.anat-whole { display: grid; justify-items: start; }
+.anat-note,
+.anat-caveat {
+  margin-top: var(--space-sm);
+  font-size: var(--text-sm);
+  color: var(--toros-steel);
+  max-width: 58ch;
+}
+
+.anat-panels {
+  margin-top: var(--space-lg);
+  display: grid;
+  gap: var(--space-md);
+}
+@media (min-width: 768px) {
+  .anat-panels { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.anat-panel {
+  padding: var(--space-md);
+  border: var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--toros-elevated);
+  transition: border-color var(--dur) var(--ease);
+}
+.anat-panel[data-active] { border-color: color-mix(in srgb, var(--toros-brass) 55%, transparent); }
+.anat-panel-title {
+  font-family: var(--font-display), Georgia, serif;
+  font-size: var(--text-h3);
+  color: var(--toros-parchment);
+}
+.anat-facts { margin-top: var(--space-sm); display: grid; gap: 0.5rem; }
+.anat-fact { display: flex; gap: var(--space-sm); justify-content: space-between; }
+.anat-fact dt { font-size: var(--text-label); color: var(--toros-steel); }
+.anat-fact dd { font-size: var(--text-sm); color: var(--toros-parchment); text-align: right; }
+.anat-panel-note {
+  margin-top: var(--space-sm);
+  font-size: var(--text-sm);
+  color: var(--toros-steel);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .anat-link-line { transition: none; }
+}
+
+/* ==========================================================================
+   Quick inspect — tabs and ground
+   ========================================================================== */
+
+.qi-ground {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(120% 90% at 50% 0%, var(--toros-charcoal), var(--toros-black) 70%);
+}
+
+.qi-tabs {
+  margin-top: var(--space-lg);
+  display: flex;
+  gap: 0.35rem;
+  border-bottom: var(--line-faint);
+}
+.qi-tab {
+  padding: 0.55rem 0.9rem;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--toros-steel);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.qi-tab:hover { color: var(--toros-parchment); }
+.qi-tab[aria-selected="true"] {
+  color: var(--toros-parchment);
+  border-bottom-color: var(--toros-brass);
+}
+.qi-panel { margin-top: var(--space-md); }
+.qi-panel .anat { margin-top: 0; }
+
+/* ==========================================================================
+   Shop toolbar and filter sheet
+   ========================================================================== */
+
+.stoolbar { margin-top: var(--space-md); }
+
+.stoolbar-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding-block: var(--space-sm);
+}
+.stoolbar-count { font-size: var(--text-sm); color: var(--toros-steel); margin: 0; }
+.stoolbar-right { display: flex; align-items: center; gap: var(--space-sm); }
+
+.stoolbar-sort { display: flex; align-items: center; gap: 0.5rem; }
+.stoolbar-sort select {
+  min-height: 2.25rem;
+  padding-inline: 0.6rem;
+  border: var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--toros-elevated);
+  color: var(--toros-parchment);
+  font-size: var(--text-sm);
+}
+
+.stoolbar-clear,
+.stoolbar-sheet-open {
+  min-height: 2.25rem;
+  padding-inline: 0.85rem;
+  border: var(--line);
+  border-radius: var(--radius-pill);
+  background: none;
+  color: var(--toros-sand);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+.stoolbar-clear:hover,
+.stoolbar-sheet-open:hover { border-color: var(--toros-brass); color: var(--toros-parchment); }
+
+/* The groups sit inline on a desktop and move into the sheet on a phone,
+   where six of them across 360px is a row nobody can use. */
+.stoolbar-groups { display: none; }
+.stoolbar-sheet-open { display: inline-flex; align-items: center; }
+
+@media (min-width: 900px) {
+  .stoolbar {
+    position: sticky;
+    top: 4.25rem;
+    z-index: 20;
+    background: var(--toros-black);
+    border-bottom: var(--line-faint);
+  }
+  .stoolbar-groups {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-md);
+    padding-bottom: var(--space-sm);
+  }
+  .stoolbar-sheet-open { display: none; }
+}
+
+.sfilter { display: grid; gap: 0.4rem; }
+.sfilter-label {
+  margin: 0;
+  font-size: var(--text-label);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--toros-steel);
+}
+.sfilter-opts { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.sfilter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2rem;
+  padding-inline: 0.75rem;
+  border: var(--line);
+  border-radius: var(--radius-pill);
+  background: none;
+  color: var(--toros-sand);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: border-color var(--dur) var(--ease), background-color var(--dur) var(--ease);
+}
+.sfilter-pill:hover { border-color: color-mix(in srgb, var(--toros-brass) 55%, transparent); }
+.sfilter-pill[aria-pressed="true"] {
+  background: var(--toros-brass);
+  border-color: var(--toros-brass);
+  color: #0b0906;
+}
+.sfilter-n { font-size: var(--text-label); opacity: 0.7; }
+
+.ssheet { position: fixed; inset: 0; z-index: 130; }
+.ssheet-scrim {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgba(0, 0, 0, 0.68);
+  backdrop-filter: blur(3px);
+}
+.ssheet-body {
+  position: absolute;
+  inset: auto 0 0 0;
+  max-height: 86svh;
+  overflow-y: auto;
+  display: grid;
+  gap: var(--space-md);
+  padding: var(--space-md) var(--gutter) var(--space-lg);
+  border-top: var(--line);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  background: var(--toros-charcoal);
+}
+.ssheet-head,
+.ssheet-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+.ssheet-foot { border-top: var(--line-faint); padding-top: var(--space-sm); }
+.ssheet-foot p { margin: 0; font-size: var(--text-sm); color: var(--toros-steel); }
+.ssheet-close {
+  min-height: 2.25rem;
+  padding-inline: 0.9rem;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--toros-brass);
+  color: #0b0906;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+/* The card's one extra action. */
+.pcard-inspect {
+  position: absolute;
+  left: 50%;
+  bottom: 0.6rem;
+  transform: translateX(-50%) translateY(0.4rem);
+  min-height: 2rem;
+  padding-inline: 0.9rem;
+  border: var(--line);
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--toros-black) 78%, transparent);
+  backdrop-filter: blur(6px);
+  color: var(--toros-parchment);
+  font-size: var(--text-label);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease);
+}
+.pcard:hover .pcard-inspect,
+.pcard:focus-within .pcard-inspect,
+.pcard-inspect:focus-visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+/* Touch has no hover, so the action is simply always there. */
+@media (hover: none) {
+  .pcard-inspect { opacity: 1; transform: translateX(-50%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pcard-inspect { transition: none; }
 }

@@ -4,7 +4,9 @@ import { notFound } from "next/navigation";
 import { ProductCard } from "@/components/ProductCard";
 import { ProductDetailsAccordion } from "@/components/product/ProductDetailsAccordion";
 import { ProductPurchasePanel } from "@/components/product/ProductPurchasePanel";
-import { ProductGallery } from "@/components/ProductGallery";
+import { Anatomy } from "@/components/product/Anatomy";
+import { ProductViewer } from "@/components/product/viewer/ProductViewer";
+import { getProductMedia } from "@/lib/product-media";
 import {
   getAllProductSlugs,
   getProductBySlug,
@@ -42,6 +44,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
   if (!product) notFound();
 
   const related = getRelatedProducts(product);
+  const media = getProductMedia(product);
   const specs = buildProductSpecs(product);
   const story = getProductStory(product);
 
@@ -79,7 +82,13 @@ export default async function ProductPage({ params }: ProductPageProps) {
         </nav>
 
         <div className="pdp-top">
-          <ProductGallery product={product} />
+          {/* The same viewer the hero and the closer look use, in the same
+              mode, from the same configuration. */}
+          <ProductViewer
+            media={media}
+            alt={`${product.name}: ${product.steel} blade with a ${product.handleMaterial} handle`}
+            className="pdp-viewer"
+          />
 
           <div className="buy">
             <p className="eyebrow">{getCategoryEyebrow(product)}</p>
@@ -117,6 +126,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
             ) : null}
           </div>
         </div>
+
+        <Anatomy product={product} media={media} />
 
         <section className="pdp-story editorial" aria-labelledby="pdp-story-heading">
           <div>

@@ -41,44 +41,6 @@ export interface HeroScene {
   summary: string;
 }
 
-/**
- * A turntable sequence: `frames` photographs of one knife, shot at even angles
- * on a rotating platform and named `frame-000` upward.
- *
- * This is deliberately a frame sequence and not a 3D model. A model of a knife
- * is an object nobody made — it would invent the grind, the tang, the pin
- * placement and the hammer marks, which is exactly the kind of invention the
- * rest of this repository refuses. Every frame here is a photograph, so turning
- * the knife can only show what the camera actually saw.
- *
- * No product has one yet; `docs/360-capture-guide.md` is the shoot that
- * produces them. Until then `spin` stays undefined and the closer look shows
- * the single static cutout, exactly as it does today.
- */
-export interface HeroSpin {
-  /** Directory holding the frames, e.g. `/images/spin/gur-tombik`. */
-  dir: string;
-  frames: number;
-  /** Intrinsic frame size, so the viewer reserves its box before loading. */
-  width: number;
-  height: number;
-  /** Frame extension; webp unless a shoot delivers something else. */
-  ext?: string;
-  /**
-   * Total degrees the sequence covers. 360 is a turntable and wraps; anything
-   * less is an inspection sweep and clamps at both ends, because snapping from
-   * one extreme back to the other would read as a glitch rather than a turn.
-   */
-  arc?: number;
-  /**
-   * How the frames were produced. `photographed` is a real turntable shoot.
-   * `relief` is derived from the single product photograph by estimating
-   * thickness from the silhouette — real pixels, real parallax, but a limited
-   * arc that never claims to show the far side.
-   */
-  source?: "photographed" | "relief";
-}
-
 /** Whether the current cutout is good enough to ship at hero scale. */
 export type HeroAssetStatus = "ready" | "needs-reshoot";
 
@@ -97,8 +59,6 @@ export interface HeroKnifePresentation {
   accent: string;
   accentSecondary: string;
   scene: HeroScene;
-  /** Turntable frames, when the knife has been shot on a rig. */
-  spin?: HeroSpin;
   assetStatus: HeroAssetStatus;
   /** Why an asset is flagged, surfaced in docs/hero-asset-audit.md. */
   assetNote?: string;
@@ -120,14 +80,6 @@ export const HERO_KNIVES: readonly HeroKnifePresentation[] = [
     imageScale: 0.92,
     accent: "#3f9bb5",
     accentSecondary: "#1f6f8b",
-    spin: {
-      dir: "/images/spin/toros-jellybean",
-      frames: 21,
-      width: 272,
-      height: 866,
-      arc: 90,
-      source: "relief",
-    },
     scene: {
       plate: "/images/hero/scenes/toros-jellybean-plate.webp",
       mid: "/images/hero/scenes/toros-jellybean-mid.webp",
@@ -153,14 +105,6 @@ export const HERO_KNIVES: readonly HeroKnifePresentation[] = [
     imageScale: 1,
     accent: "#c4a574",
     accentSecondary: "#8a6a33",
-    spin: {
-      dir: "/images/spin/bos-stag-golden-horn",
-      frames: 21,
-      width: 810,
-      height: 516,
-      arc: 90,
-      source: "relief",
-    },
     scene: {
       plate: "/images/hero/scenes/bos-stag-golden-horn-plate.webp",
       mid: "/images/hero/scenes/bos-stag-golden-horn-mid.webp",
@@ -184,14 +128,6 @@ export const HERO_KNIVES: readonly HeroKnifePresentation[] = [
     imageScale: 0.82,
     accent: "#9fb0bd",
     accentSecondary: "#5c6b78",
-    spin: {
-      dir: "/images/spin/sakra-bear-claw-neck-knives",
-      frames: 21,
-      width: 361,
-      height: 391,
-      arc: 90,
-      source: "relief",
-    },
     scene: {
       plate: "/images/hero/scenes/sakra-bear-claw-neck-knives-plate.webp",
       mid: "/images/hero/scenes/sakra-bear-claw-neck-knives-mid.webp",
@@ -217,14 +153,6 @@ export const HERO_KNIVES: readonly HeroKnifePresentation[] = [
     imageScale: 1,
     accent: "#c98f4a",
     accentSecondary: "#8a5a26",
-    spin: {
-      dir: "/images/spin/misty-stubby-giraffe",
-      frames: 21,
-      width: 791,
-      height: 347,
-      arc: 90,
-      source: "relief",
-    },
     scene: {
       plate: "/images/hero/scenes/misty-stubby-giraffe-plate.webp",
       mid: "/images/hero/scenes/misty-stubby-giraffe-mid.webp",
@@ -248,14 +176,6 @@ export const HERO_KNIVES: readonly HeroKnifePresentation[] = [
     imageScale: 1,
     accent: "#8a8f95",
     accentSecondary: "#b5643a",
-    spin: {
-      dir: "/images/spin/misty-rebar-shank",
-      frames: 21,
-      width: 860,
-      height: 470,
-      arc: 90,
-      source: "relief",
-    },
     scene: {
       plate: "/images/hero/scenes/misty-rebar-shank-plate.webp",
       mid: "/images/hero/scenes/misty-rebar-shank-mid.webp",
@@ -279,14 +199,6 @@ export const HERO_KNIVES: readonly HeroKnifePresentation[] = [
     imageScale: 1,
     accent: "#a8894a",
     accentSecondary: "#6b4a2a",
-    spin: {
-      dir: "/images/spin/gur-tuva",
-      frames: 21,
-      width: 873,
-      height: 566,
-      arc: 90,
-      source: "relief",
-    },
     scene: {
       plate: "/images/hero/scenes/gur-tuva-plate.webp",
       mid: "/images/hero/scenes/gur-tuva-mid.webp",
@@ -312,14 +224,6 @@ export const HERO_KNIVES: readonly HeroKnifePresentation[] = [
     imageScale: 1,
     accent: "#b87333",
     accentSecondary: "#7a4a22",
-    spin: {
-      dir: "/images/spin/gur-tombik",
-      frames: 21,
-      width: 870,
-      height: 542,
-      arc: 90,
-      source: "relief",
-    },
     scene: {
       plate: "/images/hero/scenes/gur-tombik-plate.webp",
       mid: "/images/hero/scenes/gur-tombik-mid.webp",
@@ -361,18 +265,3 @@ export function getHeroKnives(): HeroKnife[] {
 
   return resolved;
 }
-
-/**
- * The calibration target rendered by `scripts/build-spin-rig-test.py`.
- *
- * It exists to prove the viewer — the frame sequence, the drag mapping, the
- * progressive loader — before any knife has been shot. It is never a product
- * and never reached in normal use: the closer look only uses it when the page
- * is opened with `?spin=rig-test`.
- */
-export const RIG_TEST_SPIN: HeroSpin = {
-  dir: "/images/spin/rig-test",
-  frames: 36,
-  width: 900,
-  height: 900,
-};

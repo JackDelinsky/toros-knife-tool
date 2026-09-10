@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { QuickInspectButton } from "@/components/product/QuickInspectButton";
 import { ProductImage } from "@/components/ProductImage";
 import { formatPrice } from "@/lib/products";
 import { CATEGORY_LABELS } from "@/types/product";
@@ -29,6 +30,9 @@ export function ProductCard({ product, emphasis = false }: ProductCardProps) {
           size={emphasis ? "lg" : "md"}
         />
         {!product.inStock ? <span className="pcard-flag">Sold out</span> : null}
+        {/* One extra action, not a different behaviour for every part of the
+            card. The card itself is still just a link to the product. */}
+        <QuickInspectButton slug={product.slug} name={product.name} />
       </div>
 
       <div className="pcard-body">

@@ -4,12 +4,13 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion, type PanInfo } from "framer-motion";
-import { RIG_TEST_SPIN, type HeroKnife } from "@/components/home/hero/hero-knives";
+import { type HeroKnife } from "@/components/home/hero/hero-knives";
 import { KnifeScene, KnifeSceneForeground } from "@/components/home/hero/KnifeScene";
-import { KnifeInspectionDialog } from "@/components/home/hero/KnifeInspectionDialog";
-import { SpinViewer } from "@/components/home/hero/SpinViewer";
+import { ProductViewer } from "@/components/product/viewer/ProductViewer";
+import { useQuickInspect } from "@/components/product/QuickInspectProvider";
 import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion";
 import { useRigTestMode } from "@/lib/use-rig-test";
+import { RIG_TEST_MEDIA, getProductMedia } from "@/lib/product-media";
 import { demoCartAdapter } from "@/lib/demo-cart";
 import { formatPrice } from "@/lib/products";
 
@@ -69,22 +70,21 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
 
   const [active, setActive] = useState(0);
   const [direction, setDirection] = useState<1 | -1>(1);
-  const [inspecting, setInspecting] = useState(false);
   const [addState, setAddState] = useState<"idle" | "added">("idle");
   const [cartCount, setCartCount] = useState(0);
+  // The cue is long until the visitor has actually moved a knife, then short.
+  const [handled, setHandled] = useState(false);
 
   const lockedUntil = useRef(0);
   const dragStartX = useRef(0);
   const dragged = useRef(false);
-  const inspectTrigger = useRef<HTMLButtonElement>(null);
 
   const knife = knives[active];
   const { presentation, product } = knife;
 
-  // The active knife turns in place when it has turntable frames. Navigation
-  // then moves to the arrows and the side knives, because a horizontal drag on
-  // the stage cannot mean "rotate this knife" and "go to the next one" at once.
-  const spin = rigTest ? RIG_TEST_SPIN : presentation.spin;
+  const inspect = useQuickInspect();
+  // What this knife can honestly show, decided in lib/product-media.ts.
+  const media = rigTest ? RIG_TEST_MEDIA : getProductMedia(product);
 
   // Rapid clicks and flicks are absorbed rather than queued, so the knife,
   // scene, copy and index can never drift out of step with each other.
@@ -102,7 +102,8 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
 
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLElement>) => {
-      if (inspecting) return;
+      // The viewer stops its own arrow keys from reaching here, so arrows on
+      // the knife turn the knife and arrows anywhere else change knife.
       if (event.key === "ArrowRight") {
         event.preventDefault();
         step(1);
@@ -111,7 +112,7 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
         step(-1);
       }
     },
-    [inspecting, step],
+    [step],
   );
 
   const handleDragStart = useCallback((_: unknown, info: PanInfo) => {
@@ -134,8 +135,8 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
 
   const openInspection = useCallback(() => {
     if (dragged.current) return; // released a drag, not a tap
-    setInspecting(true);
-  }, []);
+    inspect?.open(product.slug);
+  }, [inspect, product.slug]);
 
   const addToCart = useCallback(() => {
     if (!product.inStock) return;
@@ -209,8 +210,7 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
         {/* Centre — the stage */}
         <motion.div
           className="hero-stage"
-          data-spinning={spin ? true : undefined}
-          drag={spin ? false : "x"}
+          drag="x"
           dragDirectionLock
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={0.12}
@@ -258,36 +258,26 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
                 animate={pose}
                 transition={spring}
               >
-                {isActive && spin ? (
-                  <SpinViewer
-                    spin={spin}
-                    alt={`${entry.product.name}: ${entry.product.steel} blade with a ${entry.product.handleMaterial} handle`}
-                    className="hero-spin"
-                    poster={entry.presentation.cutoutSrc}
-                    onTap={openInspection}
-                  />
-                ) : isActive ? (
-                  <button
-                    ref={inspectTrigger}
-                    type="button"
-                    className="hero-slide-button hero-slide-button--active"
-                    onClick={openInspection}
-                    aria-label={`Take a closer look at ${entry.product.name}`}
+                {isActive ? (
+                  <div
+                    className="hero-handle"
+                    // Pointer events that start on the knife belong to the
+                    // knife. Stopping them here is what keeps a drag from
+                    // being read as "turn this" and "next knife" at once —
+                    // the carousel's own drag lives on the stage behind.
+                    onPointerDown={(event) => {
+                      event.stopPropagation();
+                      setHandled(true);
+                    }}
                   >
-                    <motion.div
-                      className="hero-knife-wrap"
-                      layoutId={reducedMotion ? undefined : `hero-knife-${entry.product.slug}`}
-                      style={{
-                        rotate: entry.presentation.imageRotation,
-                        scale: entry.presentation.imageScale,
-                      }}
-                    >
-                      {image}
-                    </motion.div>
-                    <span className="hero-focus-hint" aria-hidden="true">
-                      Press Enter for a closer look
-                    </span>
-                  </button>
+                    <ProductViewer
+                      media={media}
+                      alt={`${entry.product.name}: ${entry.product.steel} blade with a ${entry.product.handleMaterial} handle`}
+                      className="hero-viewer"
+                      size="compact"
+                      onTap={openInspection}
+                    />
+                  </div>
                 ) : (
                   // The neighbours are their own selection targets. The side
                   // zones cannot cover a knife that is being dragged, so
@@ -314,32 +304,6 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
               </motion.div>
             );
           })}
-
-          {/* Deterministic navigation targets over the outer thirds. The active
-              cutout is a transparent PNG whose box is far wider than the knife,
-              so hit-testing must not depend on it.
-
-              They are dropped once the knife turns. The active slide sits in
-              its own stacking context, so a zone layered above it swallows the
-              drag before the turntable ever sees it — and a knife you can only
-              grab in its middle third feels broken. Navigation is then the
-              arrows and the keyboard, which are always available. */}
-          {!spin ? (
-            <>
-              <button
-                type="button"
-                className="hero-side-zone hero-side-zone--prev"
-                onClick={() => step(-1)}
-                aria-label={`Show ${knives[cycle(active - 1, length)].product.name}`}
-              />
-              <button
-                type="button"
-                className="hero-side-zone hero-side-zone--next"
-                onClick={() => step(1)}
-                aria-label={`Show ${knives[cycle(active + 1, length)].product.name}`}
-              />
-            </>
-          ) : null}
 
           <div className="hero-contact-shadow" aria-hidden="true" />
         </motion.div>
@@ -405,6 +369,10 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
           </svg>
         </button>
 
+        <p className="hero-cue" aria-hidden="true">
+          {handled ? "Arrows change knife" : "Drag to inspect · arrows change knife"}
+        </p>
+
         <p className="hero-index">
           <span className="hero-index-current">{String(active + 1).padStart(2, "0")}</span>
           <span className="hero-index-rule" aria-hidden="true" />
@@ -434,20 +402,6 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
         </p>
       ) : null}
 
-      <AnimatePresence>
-        {inspecting ? (
-          <KnifeInspectionDialog
-            knife={knife}
-            reducedMotion={reducedMotion}
-            addState={addState}
-            onAddToCart={addToCart}
-            onClose={() => {
-              setInspecting(false);
-              inspectTrigger.current?.focus();
-            }}
-          />
-        ) : null}
-      </AnimatePresence>
     </section>
   );
 }
