@@ -40,17 +40,14 @@ export function CategoryRail({ categories }: CategoryRailProps) {
 
   return (
     <section className="cat" aria-labelledby="cat-heading">
-      <div className="page-container">
-        <div className="cat-head">
-          <h2 id="cat-heading" className="t-h2">
-            Find the blade you came for
-          </h2>
-          <p className="t-lead cat-lead">
-            {categories.length} families, {categories.reduce((n, c) => n + c.count, 0)} knives.
-            Pick one and it opens here.
-          </p>
-        </div>
-      </div>
+      {/* The belt is the section. There is no visible heading and no intro
+          block: a title and a lead above it turned a strip of navigation into
+          a third homepage band, with its own rules above and below. The
+          categories are legible on the cards themselves, so the accessible
+          name is all that is left. */}
+      <h2 id="cat-heading" className="sr-only">
+        Knife categories
+      </h2>
 
       <div className="cat-rail" data-reduced={reducedMotion || undefined}>
         <ul className="cat-track">
@@ -71,15 +68,25 @@ export function CategoryRail({ categories }: CategoryRailProps) {
                   aria-hidden={!isPrimary}
                   tabIndex={isPrimary ? 0 : -1}
                 >
-                  <span className="cat-card-name">{entry.label}</span>
-                  <span className="cat-card-desc">{entry.description}</span>
-                  <span className="cat-card-foot">
-                    <span className="cat-card-count">
-                      {entry.count} {entry.count === 1 ? "knife" : "knives"}
-                    </span>
+                  <span className="cat-card-top">
+                    <span className="cat-card-name">{entry.label}</span>
                     <span className="cat-card-cue" aria-hidden="true">
-                      {open === entry.category ? "Close" : "Open"}
+                      {/* A direction, not a word: the belt is slim enough that
+                          "Open" and "Close" cost a line the card cannot spare. */}
+                      <svg viewBox="0 0 12 12" fill="none">
+                        <path
+                          d="M2.5 4.5L6 8l3.5-3.5"
+                          stroke="currentColor"
+                          strokeWidth="1.4"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
                     </span>
+                  </span>
+                  <span className="cat-card-desc">{entry.description}</span>
+                  <span className="cat-card-count">
+                    {entry.count} {entry.count === 1 ? "knife" : "knives"}
                   </span>
                 </button>
               </li>
