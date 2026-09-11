@@ -1723,57 +1723,130 @@ body::after {
   position: absolute;
   inset: 0;
   z-index: 0;
-  pointer-events: none;
+  overflow: hidden;
+  isolation: isolate;
 }
 
-.hero-scene-layer { position: absolute; inset: -3%; }
-.hero-scene-img { object-fit: cover; }
+/* Every layer covers the hero. The plates are all 16:9, so one rule sizes all
+   of them and the surface line lands in the same place in each scene. */
+.hero-layer { position: absolute; inset: -2%; }
+.hero-layer-img { object-fit: cover; }
+.hero-layer--sky { z-index: 0; }
+.hero-layer--far { z-index: 1; }
+.hero-layer--mid { z-index: 2; }
+/* The surface is a band that begins exactly at the line the knife rests on.
+   The plate is cropped to start at its own edge, so no cover-crop arithmetic
+   decides where the log appears — the band's top *is* the edge, at every
+   viewport. --surface-y is written from the knife's own footprint. */
+.hero-layer--surface {
+  z-index: 4;
+  inset: var(--surface-y, 63.5%) -2% -2% -2%;
+  overflow: hidden;
+}
+.hero-layer--surface .hero-layer-img { object-position: 50% 0%; }
 
-/* The middle ground is anchored low: its horizon should land near the knife's
-   feet at every aspect ratio, not float in the centre of a letterboxed crop. */
-.hero-scene-layer--mid { object-position: 50% 100%; }
-.hero-scene-layer--mid .hero-scene-img { object-position: 50% 100%; }
-
-/* Air between the plate and the middle ground — the same haze the plates were
-   rendered with, so the CSS and the raster agree. */
-.hero-scene-atmosphere {
+/* The scene's own directional light, placed from the measurement taken off
+   the photograph the plates were built from. */
+.hero-key {
   position: absolute;
   inset: 0;
-  background:
-    radial-gradient(ellipse 80% 50% at 50% 78%,
-      color-mix(in srgb, var(--knife-accent-secondary) 12%, transparent), transparent 70%);
-  mix-blend-mode: screen;
-  opacity: 0.7;
-}
-
-/* The scene's key light, thrown from the direction baked into the plates. */
-.hero-scene-key {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse 62% 58% at var(--key-x) var(--key-y),
-    color-mix(in srgb, var(--knife-accent) 34%, transparent), transparent 68%);
-  opacity: var(--key-strength);
-  mix-blend-mode: screen;
-}
-
-/* Grounds the composition and keeps the controls legible over any scene. */
-.hero-scene-floor {
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(180deg, rgba(6, 6, 5, 0.72) 0%, transparent 22%),
-    linear-gradient(0deg, rgba(6, 6, 5, 0.92) 0%, rgba(6, 6, 5, 0.35) 26%, transparent 52%);
-}
-
-.hero-scene-fore {
-  position: absolute;
-  inset-inline: -4%;
-  bottom: -2%;
-  height: 34%;
   z-index: 3;
   pointer-events: none;
+  background:
+    radial-gradient(ellipse 62% 54% at var(--key-x) var(--key-y),
+      color-mix(in srgb, var(--knife-accent) 26%, transparent), transparent 66%),
+    linear-gradient(180deg, rgba(6, 6, 5, 0.34) 0%, rgba(6, 6, 5, 0.04) 26%,
+      rgba(6, 6, 5, 0.06) 62%, rgba(6, 6, 5, 0.30) 100%);
+  opacity: var(--key-strength, 0.3);
 }
-.hero-scene-fore .hero-scene-img { object-fit: cover; object-position: 50% 100%; }
+
+/* Negative space for the type.
+
+   The scenes are now bright and the type is cream, so something has to give.
+   Darkening the whole environment is exactly what the brief rules out, so
+   this shades only the outer thirds where the copy lives and leaves the
+   middle — the knife, the surface, the light — untouched. It sits above the
+   plates and below the product. */
+.hero-readability {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(6, 6, 5, 0.88) 0%, rgba(6, 6, 5, 0.62) 16%,
+      rgba(6, 6, 5, 0.12) 30%, transparent 40%),
+    linear-gradient(270deg, rgba(6, 6, 5, 0.90) 0%, rgba(6, 6, 5, 0.74) 18%,
+      rgba(6, 6, 5, 0.28) 32%, transparent 44%),
+    linear-gradient(180deg, rgba(6, 6, 5, 0.55) 0%, transparent 18%);
+}
+
+@media (max-width: 1023px) {
+  /* One column on a phone, so the shading is top-and-bottom instead. */
+  .hero-readability {
+    background:
+      linear-gradient(180deg, rgba(6, 6, 5, 0.82) 0%, rgba(6, 6, 5, 0.30) 26%,
+        transparent 42%),
+      linear-gradient(0deg, rgba(6, 6, 5, 0.86) 0%, rgba(6, 6, 5, 0.40) 22%,
+        transparent 40%);
+  }
+}
+
+/* The near layer sits above the product so it can cross in front of it. */
+.hero-fore {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 30%;
+  z-index: 6;
+  pointer-events: none;
+  will-change: transform;
+}
+
+/* --- Ambient motion ------------------------------------------------------
+   Slow, unsynchronised, and never more than two visible plus one micro-detail
+   per scene. Transform and opacity only. The animation is keyed to the scene
+   element, so revisiting a knife restarts its world from the opening state
+   rather than resuming mid-cycle. */
+
+.hero-layer,
+.hero-fore {
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+  animation-play-state: var(--ambient-state, running);
+}
+
+@keyframes amb-drift {
+  from { transform: translate3d(calc(var(--amb) * -1), 0, 0); }
+  to   { transform: translate3d(var(--amb), 0, 0); }
+}
+@keyframes amb-sway {
+  from { transform: translate3d(calc(var(--amb) * -1), 0, 0) rotate(-0.25deg); }
+  to   { transform: translate3d(var(--amb), 0, 0) rotate(0.25deg); }
+}
+@keyframes amb-breathe {
+  from { transform: scale(1); }
+  to   { transform: scale(calc(1 + var(--amb) / 100)); }
+}
+@keyframes amb-rise {
+  from { transform: translate3d(0, var(--amb), 0); }
+  to   { transform: translate3d(calc(var(--amb) * -1), calc(var(--amb) * -1), 0); }
+}
+@keyframes amb-shimmer {
+  from { opacity: 0.86; }
+  to   { opacity: 1; }
+}
+
+/* Handling the knife quiets the world: the brief's 20-35% of normal pace. */
+.hero-scene[data-engaged] .hero-layer { animation-duration: 46s !important; }
+
+/* Nothing moves when the page is hidden, and nothing moves for a visitor who
+   has asked for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  .hero-layer,
+  .hero-fore { animation: none !important; }
+}
 
 /* --- Layout -------------------------------------------------------------- */
 
@@ -1801,6 +1874,11 @@ body::after {
 
 .hero-col {
   position: relative;
+  /* Its own stacking context, so the scrim's z-index: -1 stays behind the
+     column's text instead of falling behind the whole scene, which is where
+     it landed without this and why the type stayed unreadable. */
+  isolation: isolate;
+  position: relative;
   z-index: 4;
   min-width: 0;
 }
@@ -1810,6 +1888,15 @@ body::after {
 @media (min-width: 1024px) {
   .hero-col--story { order: 1; text-align: left; }
   .hero-col--buy { order: 3; text-align: right; }
+}
+
+.hero-title,
+.hero-line,
+.hero-price,
+.hero-fact dt,
+.hero-fact dd,
+.eyebrow {
+  text-shadow: 0 1px 10px rgba(6, 6, 5, 0.75), 0 0 2px rgba(6, 6, 5, 0.6);
 }
 
 .hero-title {
@@ -1843,6 +1930,9 @@ body::after {
   order: 1;
   position: relative;
   z-index: 2;
+  /* Pulled down so the bottom of the knife lands on the surface line rather
+     than hovering above it. Measured against the rendered plates. */
+  transform: translateY(var(--seat-y, -0.6%));
   height: clamp(15rem, 40svh, 22rem);
   display: grid;
   place-items: center;
@@ -1920,8 +2010,16 @@ body::after {
    above turns them off for the whole stage so taps fall through to the
    neighbours, and children inherit that. The active knife is the viewer, and
    it takes its own drags. */
+/* The knife is anchored to the bottom of the stage, not centred in it.
+
+   Each cutout gives its viewer a different aspect-ratio box, so centring put
+   a tall knife's base seventy pixels below a wide one's. Anchoring the box
+   itself means every knife's feet land on the same line, whatever its shape. */
 .hero-slide[data-role="active"] .hero-handle {
-  position: relative;
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
   z-index: 5;
   pointer-events: auto;
 }
@@ -1949,14 +2047,19 @@ body::after {
 
 .hero-contact-shadow {
   position: absolute;
-  bottom: 4%;
   left: 50%;
-  width: min(38%, 20rem);
-  height: 2rem;
-  transform: translateX(-50%);
-  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.75), transparent 72%);
-  filter: blur(10px);
+  /* On the surface line the plates were rendered against, not floating at an
+     arbitrary height. */
+  top: var(--surface-y, 63.5%);
+  transform: translate(-50%, -46%);
+  width: min(46%, 30rem);
+  height: 3.2rem;
+  z-index: 5;
   pointer-events: none;
+  border-radius: 50%;
+  background: radial-gradient(ellipse 50% 50% at 50% 50%,
+    rgba(10, 7, 4, 0.72), rgba(10, 7, 4, 0.34) 52%, transparent 74%);
+  filter: blur(7px);
 }
 
 /* --- Buy column ---------------------------------------------------------- */
@@ -2056,13 +2159,22 @@ body::after {
   .hero-facts { flex-direction: row; justify-content: center; gap: var(--space-md); }
   .hero-fact { border-top: 0; border-left: var(--line-faint); padding: 0 0 0 0.75rem; }
   .hero-actions { margin-top: var(--space-sm); }
-  .hero-scene-fore { height: 26%; }
+  .hero-fore { height: 24%; }
 }
 
 @media (max-width: 640px) {
   .hero-stage { height: clamp(11rem, 30svh, 16rem); }
   .hero-knife-img { max-height: clamp(10rem, 27svh, 15rem); max-width: 82vw; }
-  .hero-title { margin-top: 0.35rem; }
+  .hero-title,
+.hero-line,
+.hero-price,
+.hero-fact dt,
+.hero-fact dd,
+.eyebrow {
+  text-shadow: 0 1px 10px rgba(6, 6, 5, 0.75), 0 0 2px rgba(6, 6, 5, 0.6);
+}
+
+.hero-title { margin-top: 0.35rem; }
   .hero-actions { width: 100%; }
   .hero-actions .btn { flex: 1 1 9rem; }
   .hero-controls { padding-top: 0.6rem; gap: var(--space-sm); }
@@ -2922,33 +3034,18 @@ body::after {
    Responsive corrections
    ========================================================================== */
 
-/* On a phone the hero box is taller than it is wide, so `cover` crops a 16:9
-   scene down to a narrow vertical slice through its middle — the horizon, the
-   terrain and most of the light end up outside the frame, and the knife looks
-   like it is floating on black. The middle ground is instead laid across the
-   bottom in full, which is where a horizon belongs anyway. */
+/* Narrow viewports.
+
+   A 16:9 plate cropped to a phone becomes a vertical slice through its
+   middle, which throws away the surface line and most of the light. Each
+   layer is instead anchored to the bottom of the frame, where the surface
+   belongs, and the near layer is trimmed so it never reaches the product. */
 @media (max-width: 899px) {
-  .hero-scene-layer--plate .hero-scene-img { object-position: 50% 64%; }
+  .hero-layer-img { object-position: 50% 70%; }
 
-  .hero-scene-layer--mid {
-    inset: auto 0 0 0;
-    height: 46%;
-  }
-  .hero-scene-layer--mid .hero-scene-img {
-    object-fit: contain;
-    object-position: 50% 100%;
-  }
-
-  /* Less floor wash: a short viewport needs far less of it to keep the
-     controls legible, and more of it just buries the scene. */
-  .hero-scene-floor {
-    background:
-      linear-gradient(180deg, rgba(6, 6, 5, 0.6) 0%, transparent 18%),
-      linear-gradient(0deg, rgba(6, 6, 5, 0.8) 0%, rgba(6, 6, 5, 0.2) 22%, transparent 44%);
-  }
-
-  .hero-scene-fore { height: 30%; }
-  .hero-scene-fore .hero-scene-img { object-fit: contain; object-position: 50% 100%; }
+  .hero-key { opacity: calc(var(--key-strength, 0.3) * 0.8); }
+  .hero-fore { height: 22%; }
+  .hero-contact-shadow { width: min(62%, 18rem); height: 2.2rem; }
 }
 
 /* Two actions on one row need labels that fit. Below this they stack, rather
@@ -3000,7 +3097,31 @@ body::after {
 
   /* And a scrim behind the copy, so text holds contrast over a pale antler or
      a bright blade as well as over open sky. */
-  .hero-col { isolation: isolate; }
+  /* Text contrast without dimming the scene.
+
+   The brief is explicit that the environment must not be darkened just to
+   make type readable, so each copy column carries its own soft local gradient
+   and a restrained shadow. Brighter scenes need more of it, which is why the
+   strength is a scene variable rather than one global value. */
+.hero-col--story::before,
+.hero-col--buy::before {
+  content: "";
+  position: absolute;
+  inset: -14% -12%;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: 50%;
+  background: radial-gradient(ellipse 66% 62% at 50% 50%,
+    rgba(6, 6, 5, 0.86), rgba(6, 6, 5, 0.58) 48%, transparent 78%);
+  filter: blur(14px);
+}
+
+.hero-col {
+  position: relative;
+  /* Its own stacking context, so the scrim's z-index: -1 stays behind the
+     column's text instead of falling behind the whole scene, which is where
+     it landed without this and why the type stayed unreadable. */
+  isolation: isolate; isolation: isolate; }
   .hero-col::before {
     content: "";
     position: absolute;
@@ -3072,6 +3193,11 @@ body::after {
 .cat {
   position: relative;
   z-index: 1;
+  /* A faint wash of the hero's own light carries a few hundred pixels past
+     the seam, so the two do not meet at a hard change of world. */
+  background-image: linear-gradient(180deg,
+    color-mix(in srgb, var(--scene-surface, transparent) 22%, transparent),
+    transparent 82%);
   /* Opaque, because it slides over the sticky hero. This is the only reason
      the section paints a background at all — it is a handoff, not a panel. */
   background: var(--toros-black);
@@ -3145,9 +3271,14 @@ body::after {
   border-radius: var(--radius-sm);
   /* A tonal shift rather than a lit surface: enough to tell one card from the
      next without either of them looking like a container. */
-  background: linear-gradient(168deg, var(--toros-surface), var(--toros-charcoal));
+  /* Tinted by whichever scene the visitor was just looking at, so the belt
+     reads as the ground continuing rather than a separate interface. */
+  background: linear-gradient(168deg,
+    color-mix(in srgb, var(--scene-surface, var(--toros-surface)) 42%, var(--toros-surface)),
+    var(--toros-charcoal));
   text-align: left;
   cursor: pointer;
+  transition: background-color 900ms var(--ease), border-color var(--dur) var(--ease);
   transition: border-color var(--dur) var(--ease), background-color var(--dur) var(--ease);
 }
 .cat-card:hover { border-color: color-mix(in srgb, var(--toros-brass) 45%, transparent); }
@@ -3406,9 +3537,13 @@ body::after {
   .pv-stage { max-height: 40svh; }
 }
 
-/* The viewer standing on the hero stage: it matches the cutout's footprint so
-   the composition does not resize between knives. */
+/* The viewer standing on the hero stage.
+
+   Bottom-aligned, not centred: the knife has to meet the surface line the
+   plates were rendered against, and a centred image leaves a gap under it
+   that reads as floating however good the shadow is. */
 .hero-viewer .pv-stage {
+  place-items: end center;
   max-width: min(74vw, 32rem);
   max-height: clamp(13rem, 36svh, 20rem);
 }

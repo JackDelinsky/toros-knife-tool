@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion, type PanInfo } from "framer-motion";
@@ -11,6 +11,7 @@ import { useQuickInspect } from "@/components/product/QuickInspectProvider";
 import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion";
 import { useRigTestMode } from "@/lib/use-rig-test";
 import { RIG_TEST_MEDIA, getProductMedia } from "@/lib/product-media";
+import { getHeroScene } from "@/lib/hero-scenes";
 import { demoCartAdapter } from "@/lib/demo-cart";
 import { formatPrice } from "@/lib/products";
 
@@ -73,13 +74,68 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
   const [cartCount, setCartCount] = useState(0);
   // The cue is long until the visitor has actually moved a knife, then short.
   const [handled, setHandled] = useState(false);
+  // True from the moment a pointer lands on the knife until it is let go:
+  // the knife lifts, its shadow softens, and the world behind it calms.
+  const [engaged, setEngaged] = useState(false);
 
   const lockedUntil = useRef(0);
+  const heroRef = useRef<HTMLElement>(null);
 
   const knife = knives[active];
   const { presentation, product } = knife;
 
   const inspect = useQuickInspect();
+  const scene = getHeroScene(presentation.slug);
+
+  // The belt is a sibling of the hero, not a child, so the tone is written to
+  // the document element rather than inherited.
+  useEffect(() => {
+    if (!scene) return;
+    const root = document.documentElement;
+    root.style.setProperty("--scene-surface", scene.surfaceTone);
+    root.style.setProperty("--scene-accent", scene.accent);
+  }, [scene]);
+
+  // The surface line goes wherever the knife's feet actually are.
+  //
+  // It cannot be a constant: the hero stacks differently at every width, so
+  // the stage sits at 36% of the hero on a phone and 61% on a desktop. Rather
+  // than keep a table of breakpoint guesses, the knife is measured and the
+  // scene follows it, which is correct by construction at any size.
+  useEffect(() => {
+    const hero = heroRef.current;
+    if (!hero) return;
+    const place = () => {
+      const img = hero.querySelector<HTMLImageElement>(".hero-viewer .pv-img");
+      if (!img) return;
+      const h = hero.getBoundingClientRect();
+      const k = img.getBoundingClientRect();
+      if (h.height < 1) return;
+      const pct = ((k.bottom - h.top) / h.height) * 100;
+      hero.style.setProperty("--surface-y", `${pct.toFixed(2)}%`);
+    };
+    place();
+    const ro = new ResizeObserver(place);
+    ro.observe(hero);
+    const id = window.setTimeout(place, 400);
+    return () => {
+      ro.disconnect();
+      window.clearTimeout(id);
+    };
+  }, [active]);
+
+  // Nothing moves while the tab is in the background. Ambient animation that
+  // keeps running on a hidden page is work nobody can see.
+  useEffect(() => {
+    const apply = () =>
+      document.documentElement.style.setProperty(
+        "--ambient-state",
+        document.hidden ? "paused" : "running",
+      );
+    apply();
+    document.addEventListener("visibilitychange", apply);
+    return () => document.removeEventListener("visibilitychange", apply);
+  }, []);
   // What this knife can honestly show, decided in lib/product-media.ts.
   const media = rigTest ? RIG_TEST_MEDIA : getProductMedia(product);
 
@@ -164,6 +220,7 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
 
   return (
     <section
+      ref={heroRef}
       className="hero"
       aria-roledescription="carousel"
       aria-label="Featured Toros knives"
@@ -173,17 +230,24 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
         {
           "--knife-accent": presentation.accent,
           "--knife-accent-secondary": presentation.accentSecondary,
+          // Published on the document so the category belt below can pick up
+          // the ground the visitor was just looking at, without the belt
+          // having to know anything about the hero.
+          "--scene-surface": scene?.surfaceTone ?? "var(--toros-charcoal)",
         } as React.CSSProperties
       }
     >
       <AnimatePresence initial={false} mode="sync">
-        <KnifeScene
-          key={presentation.slug}
-          presentation={presentation}
-          reducedMotion={reducedMotion}
-          direction={direction}
-          eager={active === 0}
-        />
+        {scene ? (
+          <KnifeScene
+            key={scene.slug}
+            scene={scene}
+            reducedMotion={reducedMotion}
+            direction={direction}
+            eager={active === 0}
+            engaged={engaged}
+          />
+        ) : null}
       </AnimatePresence>
 
       <div className="hero-grid">
@@ -257,11 +321,25 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
                 transition={spring}
               >
                 {isActive ? (
-                  <div
+                  <motion.div
                     className="hero-handle"
-                    // Purely to shorten the cue once the visitor has moved a
-                    // knife; the gesture itself is the viewer's business.
-                    onPointerDown={() => setHandled(true)}
+                    // Picked up, not jumped: a short controlled lift, and the
+                    // exact reverse of it on release. No bounce — the return
+                    // should read as careful placement by hand.
+                    animate={{ y: engaged && !reducedMotion ? -22 : 0 }}
+                    transition={
+                      reducedMotion
+                        ? { duration: 0.15 }
+                        : { type: "spring", stiffness: 210, damping: 30, mass: 0.7 }
+                    }
+                    onPointerDown={() => {
+                      setHandled(true);
+                      setEngaged(true);
+                    }}
+                    onPointerUp={() => setEngaged(false)}
+                    onPointerCancel={() => setEngaged(false)}
+                    onFocus={() => setEngaged(true)}
+                    onBlur={() => setEngaged(false)}
                   >
                     <ProductViewer
                       media={media}
@@ -270,7 +348,7 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
                       size="compact"
                       onTap={openInspection}
                     />
-                  </div>
+                  </motion.div>
                 ) : (
                   // The neighbours are their own selection targets. The side
                   // zones cannot cover a knife that is being dragged, so
@@ -298,7 +376,17 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
             );
           })}
 
-          <div className="hero-contact-shadow" aria-hidden="true" />
+          <motion.div
+            className="hero-contact-shadow"
+            data-engaged={engaged || undefined}
+            animate={
+              reducedMotion
+                ? {}
+                : { scaleX: engaged ? 1.16 : 1, scaleY: engaged ? 1.3 : 1, opacity: engaged ? 0.45 : 0.8 }
+            }
+            transition={{ type: "spring", stiffness: 210, damping: 30, mass: 0.7 }}
+            aria-hidden="true"
+          />
         </div>
 
         {/* Right — price, two facts, the actions */}
@@ -342,12 +430,15 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
 
       {/* Near layer — above the knife, so it genuinely overlaps it. */}
       <AnimatePresence initial={false} mode="sync">
-        <KnifeSceneForeground
-          key={`fore-${presentation.slug}`}
-          presentation={presentation}
-          reducedMotion={reducedMotion}
-          direction={direction}
-        />
+        {scene ? (
+          <KnifeSceneForeground
+            key={`fore-${scene.slug}`}
+            scene={scene}
+            reducedMotion={reducedMotion}
+            direction={direction}
+            engaged={engaged}
+          />
+        ) : null}
       </AnimatePresence>
 
       <div className="hero-controls">

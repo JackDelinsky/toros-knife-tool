@@ -7,7 +7,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { Anatomy } from "@/components/product/Anatomy";
 import { ProductViewer } from "@/components/product/viewer/ProductViewer";
-import { HERO_KNIVES } from "@/components/home/hero/hero-knives";
+import { getHeroScene } from "@/lib/hero-scenes";
 import { getProductMedia } from "@/lib/product-media";
 import { buildProductSpecs } from "@/lib/product-page";
 import { formatPrice } from "@/lib/products";
@@ -55,7 +55,7 @@ export function QuickInspect({
   const [tab, setTab] = useState<Tab>("overview");
 
   const media = getProductMedia(product);
-  const scene = HERO_KNIVES.find((k) => k.slug === product.slug)?.scene;
+  const scene = getHeroScene(product.slug);
   const specs = buildProductSpecs(product);
   const alt = `${product.name}: ${product.steel} blade with a ${product.handleMaterial} handle`;
 
@@ -112,18 +112,18 @@ export function QuickInspect({
       style={
         scene
           ? ({
-              "--key-x": `${50 + scene.keyX * 34}%`,
-              "--key-y": `${50 - scene.keyY * 30}%`,
-              "--key-strength": scene.keyStrength,
+              "--key-x": `${scene.lightX * 100}%`,
+              "--key-y": `${(1 - scene.lightY) * 100}%`,
+              "--key-strength": scene.lightStrength,
             } as React.CSSProperties)
           : undefined
       }
     >
       {scene ? (
         <motion.div className="qi-scene" {...fade} aria-hidden="true">
-          <Image src={scene.plate} alt="" fill sizes="100vw" className="qi-scene-img" />
+          <Image src={scene.sky} alt="" fill sizes="100vw" className="qi-scene-img" />
           <div className="qi-scene-mid">
-            <Image src={scene.mid} alt="" fill sizes="100vw" className="qi-scene-img" />
+            <Image src={scene.far} alt="" fill sizes="100vw" className="qi-scene-img" />
           </div>
           <div className="qi-scene-key" />
         </motion.div>
