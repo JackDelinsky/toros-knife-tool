@@ -29,7 +29,17 @@ export function CategoryRail({ categories }: CategoryRailProps) {
 
   function toggle(category: ProductCategory) {
     // Re-picking the open category closes it; picking another swaps content.
-    setOpen((current) => (current === category ? null : category));
+    setOpen((current) => {
+      const next = current === category ? null : category;
+      if (next) {
+        // Bring the panel into view rather than expanding it off-screen
+        // below the fold, which is where it opened from a belt card.
+        window.requestAnimationFrame(() =>
+          panelRef.current?.scrollIntoView({ block: "start", behavior: "smooth" }),
+        );
+      }
+      return next;
+    });
   }
 
   // The track holds two identical sets and slides by exactly one set width, so
@@ -118,13 +128,15 @@ export function CategoryRail({ categories }: CategoryRailProps) {
                     <h3 className="t-h3">{selected.label}</h3>
                     <p className="t-meta cat-panel-desc">{selected.description}</p>
                   </div>
-                  <Link href={selected.href} className="link cat-panel-all">
+                  <Link href={selected.href} className="btn btn--secondary cat-panel-all">
                     View all {selected.count} {selected.label.toLowerCase()}
                   </Link>
                 </div>
 
+                {/* Four at most. This is a way into the category, not the
+                    category itself — the link below goes to all of them. */}
                 <div className="cat-panel-grid">
-                  {selected.products.map((product) => (
+                  {selected.products.slice(0, 4).map((product) => (
                     <ProductCard key={product.id} product={product} />
                   ))}
                 </div>

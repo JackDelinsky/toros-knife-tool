@@ -38,7 +38,7 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
       ? "Misty Series"
       : filters.category
         ? CATEGORY_LABELS[filters.category]
-        : "Every blade";
+        : "Shop the collection";
 
   const description =
     filters.tag === "misty"

@@ -5,13 +5,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion, type PanInfo } from "framer-motion";
 import { type HeroKnife } from "@/components/home/hero/hero-knives";
-import { KnifeScene, KnifeSceneForeground } from "@/components/home/hero/KnifeScene";
+import { KnifeScene } from "@/components/home/hero/KnifeScene";
 import { ProductViewer } from "@/components/product/viewer/ProductViewer";
 import { useQuickInspect } from "@/components/product/QuickInspectProvider";
 import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion";
 import { useRigTestMode } from "@/lib/use-rig-test";
 import { RIG_TEST_MEDIA, getProductMedia } from "@/lib/product-media";
-import { getHeroScene } from "@/lib/hero-scenes";
+import { getHeroPresentation, getHeroScene } from "@/lib/hero-scenes";
 import { demoCartAdapter } from "@/lib/demo-cart";
 import { formatPrice } from "@/lib/products";
 
@@ -44,20 +44,23 @@ function slidePose(offset: number, flat: boolean) {
   const isActive = offset === 0;
   const isNeighbour = Math.abs(offset) === 1;
   return {
-    x: `${offset * 58}%`,
-    scale: isActive ? 1 : 0.54,
-    // Neighbours stay recognisable rather than being crushed to silhouettes,
-    // but far enough out that they never sit under the copy or the price.
-    opacity: isActive ? 1 : isNeighbour ? 0.46 : 0,
+    // Pushed to the stage edges, where they can be partly cropped, and never
+    // far enough in to reach the copy or the price.
+    // Kept inside the stage. At 72% a neighbour's centre sat beyond the
+    // stage edge and its silhouette landed on the price and the buttons.
+    x: `${offset * 44}%`,
+    scale: isActive ? 1 : 0.42,
+    // Recognisable but plainly secondary: a restrained preview, not fog.
+    opacity: isActive ? 1 : isNeighbour ? 0.34 : 0,
     filter: isActive
       ? "blur(0px) brightness(1) saturate(1)"
-      : "blur(2.5px) brightness(0.74) saturate(0.7)",
-    rotateY: flat ? 0 : offset * -11,
-    zIndex: isActive ? 3 : 2 - Math.abs(offset),
+      : "blur(3px) brightness(0.82) saturate(0.82)",
+    rotateY: flat ? 0 : offset * -9,
+    zIndex: isActive ? 3 : 1,
   };
 }
 
-const STEP_LOCK_MS = 340;
+const STEP_LOCK_MS = 720;
 const DRAG_DISTANCE = 70;
 const DRAG_VELOCITY = 320;
 /** Slides kept mounted either side of centre: one visible, one warming up. */
@@ -69,7 +72,6 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
   const length = knives.length;
 
   const [active, setActive] = useState(0);
-  const [direction, setDirection] = useState<1 | -1>(1);
   const [addState, setAddState] = useState<"idle" | "added">("idle");
   const [cartCount, setCartCount] = useState(0);
   // The cue is long until the visitor has actually moved a knife, then short.
@@ -80,12 +82,14 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
 
   const lockedUntil = useRef(0);
   const heroRef = useRef<HTMLElement>(null);
+  const queued = useRef<1 | -1 | null>(null);
 
   const knife = knives[active];
   const { presentation, product } = knife;
 
   const inspect = useQuickInspect();
   const scene = getHeroScene(presentation.slug);
+  const presentation2 = getHeroPresentation(presentation.slug);
 
   // The belt is a sibling of the hero, not a child, so the tone is written to
   // the document element rather than inherited.
@@ -144,14 +148,30 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
   const step = useCallback(
     (delta: 1 | -1) => {
       const now = Date.now();
-      if (now < lockedUntil.current) return;
+      if (now < lockedUntil.current) {
+        // Queue at most one further intent. Without the lock, hammering the
+        // arrows left several knives mid-flight around the centre at once
+        // and the copy out of step with the product.
+        queued.current = delta;
+        return;
+      }
       lockedUntil.current = now + STEP_LOCK_MS;
-      setDirection(delta);
       setActive((current) => cycle(current + delta, length));
       setAddState("idle");
     },
     [length],
   );
+
+  // Drain a queued navigation once the current transition has finished.
+  useEffect(() => {
+    if (queued.current === null) return;
+    const id = window.setTimeout(() => {
+      const next = queued.current;
+      queued.current = null;
+      if (next) step(next);
+    }, STEP_LOCK_MS);
+    return () => window.clearTimeout(id);
+  }, [active, step]);
 
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLElement>) => {
@@ -209,7 +229,7 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
 
   const spring = reducedMotion
     ? { duration: 0.2 }
-    : { type: "spring" as const, stiffness: 120, damping: 22, mass: 0.9 };
+    : { duration: 0.72, ease: [0.32, 0.72, 0.24, 1] as const };
 
   const copyMotion = {
     initial: reducedMotion ? { opacity: 0 } : { opacity: 0, y: 14 },
@@ -243,8 +263,6 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
             key={scene.slug}
             scene={scene}
             reducedMotion={reducedMotion}
-            direction={direction}
-            eager={active === 0}
             engaged={engaged}
           />
         ) : null}
@@ -346,8 +364,15 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
                       alt={`${entry.product.name}: ${entry.product.steel} blade with a ${entry.product.handleMaterial} handle`}
                       className="hero-viewer"
                       size="compact"
+                      fill={presentation2.widthPct}
+                      rotate={presentation2.rotate}
                       onTap={openInspection}
                     />
+                    {/* One hint, once. It sits below the silhouette and
+                        disappears the first time the knife is touched. */}
+                    <span className="hero-hint" data-used={handled || undefined} aria-hidden="true">
+                      Drag to inspect
+                    </span>
                   </motion.div>
                 ) : (
                   // The neighbours are their own selection targets. The side
@@ -428,23 +453,11 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
         </div>
       </div>
 
-      {/* Near layer — above the knife, so it genuinely overlaps it. */}
-      <AnimatePresence initial={false} mode="sync">
-        {scene ? (
-          <KnifeSceneForeground
-            key={`fore-${scene.slug}`}
-            scene={scene}
-            reducedMotion={reducedMotion}
-            direction={direction}
-            engaged={engaged}
-          />
-        ) : null}
-      </AnimatePresence>
 
       <div className="hero-controls">
         <button
           type="button"
-          className="btn btn--icon hero-arrow"
+          className="hero-arrow hero-arrow--prev"
           onClick={() => step(-1)}
           aria-label="Previous knife"
         >
@@ -452,10 +465,6 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
             <path d="M15 5l-7 7 7 7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
-
-        <p className="hero-cue" aria-hidden="true">
-          {handled ? "Arrows change knife" : "Drag to inspect · arrows change knife"}
-        </p>
 
         <p className="hero-index">
           <span className="hero-index-current">{String(active + 1).padStart(2, "0")}</span>
@@ -465,7 +474,7 @@ export function FeaturedKnifeHero({ knives }: FeaturedKnifeHeroProps) {
 
         <button
           type="button"
-          className="btn btn--icon hero-arrow"
+          className="hero-arrow hero-arrow--next"
           onClick={() => step(1)}
           aria-label="Next knife"
         >

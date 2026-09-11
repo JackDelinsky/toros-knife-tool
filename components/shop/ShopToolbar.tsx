@@ -143,15 +143,50 @@ export function ShopToolbar({ options, filters, resultCount }: ShopToolbarProps)
             </select>
           </label>
 
-          {active > 0 ? (
-            <button type="button" className="stoolbar-clear" onClick={clearAll}>
-              Clear all
-            </button>
-          ) : null}
         </div>
       </div>
 
-      <div className="stoolbar-groups">{groups}</div>
+      {/* No permanently exposed chip rows. Six filter groups spread across the
+          page is a wall of tiny targets that answers a question nobody asked
+          yet; everything advanced lives behind the one Filter button. */}
+      {active > 0 ? (
+        <div className="stoolbar-active">
+          {filters.category ? (
+            <button type="button" className="stoolbar-chip" onClick={() => setParam("category", undefined)}>
+              {options.categories.find((c) => c.value === filters.category)?.label}
+              <span aria-hidden="true">×</span>
+              <span className="sr-only">, remove filter</span>
+            </button>
+          ) : null}
+          {filters.steel ? (
+            <button type="button" className="stoolbar-chip" onClick={() => setParam("steel", undefined)}>
+              {filters.steel}<span aria-hidden="true">×</span>
+              <span className="sr-only">, remove filter</span>
+            </button>
+          ) : null}
+          {filters.handle ? (
+            <button type="button" className="stoolbar-chip" onClick={() => setParam("handle", undefined)}>
+              {filters.handle}<span aria-hidden="true">×</span>
+              <span className="sr-only">, remove filter</span>
+            </button>
+          ) : null}
+          {filters.maxPrice !== undefined ? (
+            <button type="button" className="stoolbar-chip" onClick={() => setParam("price", undefined)}>
+              Under ${filters.maxPrice}<span aria-hidden="true">×</span>
+              <span className="sr-only">, remove filter</span>
+            </button>
+          ) : null}
+          {filters.inStockOnly ? (
+            <button type="button" className="stoolbar-chip" onClick={() => setParam("availability", undefined)}>
+              In stock<span aria-hidden="true">×</span>
+              <span className="sr-only">, remove filter</span>
+            </button>
+          ) : null}
+          <button type="button" className="stoolbar-clear" onClick={clearAll}>
+            Clear all
+          </button>
+        </div>
+      ) : null}
 
       {sheetOpen ? (
         <div className="ssheet" role="dialog" aria-modal="true" aria-label="Filters">

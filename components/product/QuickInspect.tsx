@@ -2,7 +2,6 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Anatomy } from "@/components/product/Anatomy";
@@ -25,7 +24,7 @@ const FOCUSABLE = 'a[href], button:not([disabled]), input, [tabindex]:not([tabin
 type Tab = "overview" | "anatomy" | "specifications";
 const TABS: ReadonlyArray<{ key: Tab; label: string }> = [
   { key: "overview", label: "Overview" },
-  { key: "anatomy", label: "Anatomy" },
+  { key: "anatomy", label: "Blade & handle" },
   { key: "specifications", label: "Specifications" },
 ];
 
@@ -112,24 +111,21 @@ export function QuickInspect({
       style={
         scene
           ? ({
-              "--key-x": `${scene.lightX * 100}%`,
-              "--key-y": `${(1 - scene.lightY) * 100}%`,
-              "--key-strength": scene.lightStrength,
+              "--knife-accent": scene.accent,
+              "--key-x": `${scene.keyX}%`,
+              "--key-y": `${scene.keyY}%`,
+              "--key-strength": Math.min(scene.keyStrength, 0.3),
             } as React.CSSProperties)
           : undefined
       }
     >
-      {scene ? (
-        <motion.div className="qi-scene" {...fade} aria-hidden="true">
-          <Image src={scene.sky} alt="" fill sizes="100vw" className="qi-scene-img" />
-          <div className="qi-scene-mid">
-            <Image src={scene.far} alt="" fill sizes="100vw" className="qi-scene-img" />
-          </div>
-          <div className="qi-scene-key" />
-        </motion.div>
-      ) : (
-        <motion.div className="qi-ground" {...fade} aria-hidden="true" />
-      )}
+      {/* Opaque, not a tint over the page. The previous overlay let a bright
+          scene through and put near-white type on it; nothing in it was
+          readable. The product keeps a faint key in its own colour, and
+          everything else is off-black. */}
+      <motion.div className="qi-ground" {...fade} aria-hidden="true">
+        <div className="qi-key" />
+      </motion.div>
 
       {/* Clicking anywhere off the content closes; a real button so the gesture
           exists for assistive tech rather than being a bare div handler. */}

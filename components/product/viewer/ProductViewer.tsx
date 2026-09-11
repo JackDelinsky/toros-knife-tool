@@ -9,6 +9,18 @@ import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion";
 
 interface ProductViewerProps {
   media: ProductMedia;
+  /**
+   * Share of the stage's width the *visible silhouette* should occupy, 0-1.
+   *
+   * Sizing by the file rectangle is what made the hero knives look like
+   * thumbnails: the cutouts have different aspect ratios and different
+   * amounts of empty margin, so one shared max-width rendered a wide knife at
+   * half the height of a tall one. When this is set the viewer solves for the
+   * box that puts the silhouette at the requested width instead.
+   */
+  fill?: number;
+  /** Degrees of resting rotation, where the real cutout supports the pose. */
+  rotate?: number;
   /** Describes the product once — never once per frame. */
   alt: string;
   className?: string;
@@ -54,6 +66,8 @@ export function ProductViewer({
   className = "",
   onTap,
   size = "full",
+  fill,
+  rotate = 0,
 }: ProductViewerProps) {
   const reducedMotion = usePrefersReducedMotion();
   const coarse = useCoarsePointer();
@@ -223,6 +237,10 @@ export function ProductViewer({
   const spanMin = sequence && wraps ? 0 : -(sequence ? sequence.arc / 2 : MAX_YAW);
   const spanMax = sequence && wraps ? 359 : sequence ? sequence.arc / 2 : MAX_YAW;
   const scale = ZOOM_STEPS[zoom];
+  // A rotated box needs more room than its own width, or the corners clip.
+  const rad = (Math.abs(rotate) * Math.PI) / 180;
+  const spread = Math.cos(rad) + (box.height / box.width) * Math.sin(rad);
+  const fillWidth = fill ? `${Math.min((fill / spread) * 100, 100)}%` : undefined;
 
   const verb = coarse ? "Swipe" : "Drag";
   const hint = `${label.replace(/^Drag/, verb)} · arrow keys also work`;
@@ -234,7 +252,10 @@ export function ProductViewer({
         className="pv-stage"
         data-dragging={dragging || undefined}
         data-zoomed={zoom > 0 || undefined}
-        style={{ aspectRatio: `${box.width} / ${box.height}` }}
+        style={{
+          aspectRatio: `${box.width} / ${box.height}`,
+          ...(fillWidth ? { width: fillWidth, maxWidth: fillWidth } : null),
+        }}
         role="slider"
         tabIndex={0}
         aria-label={`${showsEveryAngle(media) ? "Rotate" : "Tilt"} ${alt}`}
@@ -264,8 +285,8 @@ export function ProductViewer({
           draggable={false}
           style={{
             transform: reducedMotion
-              ? `scale(${scale})`
-              : `perspective(1400px) rotateX(${pitch}deg) rotateY(${usingFrames ? 0 : yaw}deg) scale(${scale})`,
+              ? `rotate(${rotate}deg) scale(${scale})`
+              : `perspective(1400px) rotateX(${pitch}deg) rotateY(${usingFrames ? 0 : yaw}deg) rotate(${rotate}deg) scale(${scale})`,
           }}
         />
       </div>

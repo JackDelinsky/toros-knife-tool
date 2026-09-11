@@ -51,34 +51,67 @@ export function Anatomy({ product, media }: AnatomyProps) {
         <h3 id={headingId} className="t-h3">
           Blade and handle
         </h3>
-        {separable ? (
-          <button
-            type="button"
-            className="btn btn--secondary anat-toggle"
-            onClick={() => setApart((v) => !v)}
-            aria-pressed={apart}
-          >
-            {apart ? "Reassemble" : "View anatomy"}
-          </button>
-        ) : null}
+        <button
+          type="button"
+          className="btn btn--secondary anat-toggle"
+          onClick={() => setApart((v) => !v)}
+          aria-pressed={apart}
+        >
+          {separable
+            ? apart
+              ? "Reassemble"
+              : "Separate blade & handle"
+            : apart
+              ? "Hide labels"
+              : "Explore blade & handle"}
+        </button>
       </div>
 
       {separable ? (
         <SeparatedStage product={product} media={media} apart={apart} reduced={reducedMotion} />
       ) : (
-        <figure className="anat-whole">
-          {/* eslint-disable-next-line @next/next/no-img-element -- a plain
-              still; next/image adds nothing here and the box is already fixed. */}
-          <img
-            src={whole.src}
-            alt={`${product.name}, whole`}
-            width={whole.width}
-            height={whole.height}
-            className="anat-whole-img"
-          />
+        <figure className="anat-whole" data-labelled={apart || undefined}>
+          <div className="anat-whole-stage">
+            {/* eslint-disable-next-line @next/next/no-img-element -- a plain
+                still; next/image adds nothing here and the box is fixed. */}
+            <img
+              src={whole.src}
+              alt={`${product.name}, whole`}
+              width={whole.width}
+              height={whole.height}
+              className="anat-whole-img"
+            />
+            {/* Two labelled hotspots on the one real photograph.
+
+                There is deliberately no separation here. The earlier version
+                showed a second copy of the assembled knife under the first
+                with empty bars beneath it, which explained nothing and read
+                as unfinished. Where the photograph cannot be cut honestly —
+                the knife is on its sheath, or there are three knives in the
+                frame — a labelled still is the truthful presentation. */}
+            <button
+              type="button"
+              className="anat-spot anat-spot--blade"
+              aria-pressed={apart}
+              onClick={() => setApart(true)}
+            >
+              <span className="anat-spot-dot" aria-hidden="true" />
+              <span className="anat-spot-label">Blade</span>
+            </button>
+            <button
+              type="button"
+              className="anat-spot anat-spot--handle"
+              aria-pressed={apart}
+              onClick={() => setApart(true)}
+            >
+              <span className="anat-spot-dot" aria-hidden="true" />
+              <span className="anat-spot-label">Handle</span>
+            </button>
+          </div>
           <figcaption className="anat-note">
-            This product&rsquo;s photograph shows the knife on its sheath or beside others, so it
-            cannot be separated cleanly. It is shown whole rather than badly cut.
+            This knife&rsquo;s photograph shows it on its sheath, or beside others, so blade and
+            handle cannot be separated without cutting something that is not the knife. The two
+            are labelled on the real photograph instead.
           </figcaption>
         </figure>
       )}

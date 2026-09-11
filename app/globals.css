@@ -1727,125 +1727,59 @@ body::after {
   isolation: isolate;
 }
 
-/* Every layer covers the hero. The plates are all 16:9, so one rule sizes all
-   of them and the surface line lands in the same place in each scene. */
-.hero-layer { position: absolute; inset: -2%; }
-.hero-layer-img { object-fit: cover; }
-.hero-layer--sky { z-index: 0; }
-.hero-layer--far { z-index: 1; }
-.hero-layer--mid { z-index: 2; }
-/* The surface is a band that begins exactly at the line the knife rests on.
-   The plate is cropped to start at its own edge, so no cover-crop arithmetic
-   decides where the log appears — the band's top *is* the edge, at every
-   viewport. --surface-y is written from the knife's own footprint. */
-.hero-layer--surface {
-  z-index: 4;
-  inset: var(--surface-y, 63.5%) -2% -2% -2%;
-  overflow: hidden;
+/* The ground. Warm or cool per product, so the seven are not one background
+   repeated, but never a photograph and never a horizon. */
+.hero-ground {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(120% 88% at 50% 118%,
+      color-mix(in srgb, var(--scene-ground) 82%, #000), var(--scene-ground) 62%),
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--scene-ground) 70%, #000) 0%,
+      var(--scene-ground) 46%,
+      color-mix(in srgb, var(--scene-ground) 88%, #000) 100%);
 }
-.hero-layer--surface .hero-layer-img { object-position: 50% 0%; }
 
-/* The scene's own directional light, placed from the measurement taken off
-   the photograph the plates were built from. */
+/* One warm key behind the product, in the product's own accent. This is the
+   only bright thing in the frame, which is what keeps the knife the subject. */
 .hero-key {
   position: absolute;
   inset: 0;
-  z-index: 3;
-  pointer-events: none;
   background:
-    radial-gradient(ellipse 62% 54% at var(--key-x) var(--key-y),
-      color-mix(in srgb, var(--knife-accent) 26%, transparent), transparent 66%),
-    linear-gradient(180deg, rgba(6, 6, 5, 0.34) 0%, rgba(6, 6, 5, 0.04) 26%,
-      rgba(6, 6, 5, 0.06) 62%, rgba(6, 6, 5, 0.30) 100%);
-  opacity: var(--key-strength, 0.3);
+    radial-gradient(ellipse 40% 44% at var(--key-x) var(--key-y),
+      color-mix(in srgb, var(--knife-accent) 62%, transparent), transparent 70%),
+    radial-gradient(ellipse 74% 60% at var(--key-x) var(--key-y),
+      color-mix(in srgb, var(--knife-accent) 22%, transparent), transparent 76%);
+  opacity: var(--key-strength, 0.34);
+  transition: opacity 700ms var(--ease);
 }
+/* Handling the knife settles the light rather than animating the scene. */
+.hero-scene[data-engaged] .hero-key { opacity: calc(var(--key-strength, 0.34) * 0.72); }
 
-/* Negative space for the type.
-
-   The scenes are now bright and the type is cream, so something has to give.
-   Darkening the whole environment is exactly what the brief rules out, so
-   this shades only the outer thirds where the copy lives and leaves the
-   middle — the knife, the surface, the light — untouched. It sits above the
-   plates and below the product. */
-.hero-readability {
+.hero-vignette {
   position: absolute;
   inset: 0;
-  z-index: 5;
-  pointer-events: none;
   background:
-    linear-gradient(90deg, rgba(6, 6, 5, 0.88) 0%, rgba(6, 6, 5, 0.62) 16%,
-      rgba(6, 6, 5, 0.12) 30%, transparent 40%),
-    linear-gradient(270deg, rgba(6, 6, 5, 0.90) 0%, rgba(6, 6, 5, 0.74) 18%,
-      rgba(6, 6, 5, 0.28) 32%, transparent 44%),
-    linear-gradient(180deg, rgba(6, 6, 5, 0.55) 0%, transparent 18%);
+    radial-gradient(130% 96% at 50% 46%, transparent 44%, rgba(4, 4, 3, 0.62) 100%),
+    linear-gradient(90deg, rgba(4, 4, 3, 0.58) 0%, transparent 26%),
+    linear-gradient(270deg, rgba(4, 4, 3, 0.58) 0%, transparent 26%);
 }
 
-@media (max-width: 1023px) {
-  /* One column on a phone, so the shading is top-and-bottom instead. */
-  .hero-readability {
-    background:
-      linear-gradient(180deg, rgba(6, 6, 5, 0.82) 0%, rgba(6, 6, 5, 0.30) 26%,
-        transparent 42%),
-      linear-gradient(0deg, rgba(6, 6, 5, 0.86) 0%, rgba(6, 6, 5, 0.40) 22%,
-        transparent 40%);
-  }
-}
-
-/* The near layer sits above the product so it can cross in front of it. */
-.hero-fore {
+/* Fine grain so the gradients never band on a wide screen. */
+.hero-grain {
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 30%;
-  z-index: 6;
-  pointer-events: none;
-  will-change: transform;
+  inset: 0;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml;utf8,\
+<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'>\
+<filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/>\
+</filter><rect width='140' height='140' filter='url(%23n)'/></svg>");
+  background-size: 140px 140px;
 }
 
-/* --- Ambient motion ------------------------------------------------------
-   Slow, unsynchronised, and never more than two visible plus one micro-detail
-   per scene. Transform and opacity only. The animation is keyed to the scene
-   element, so revisiting a knife restarts its world from the opening state
-   rather than resuming mid-cycle. */
-
-.hero-layer,
-.hero-fore {
-  animation-timing-function: ease-in-out;
-  animation-iteration-count: infinite;
-  animation-direction: alternate;
-  animation-play-state: var(--ambient-state, running);
-}
-
-@keyframes amb-drift {
-  from { transform: translate3d(calc(var(--amb) * -1), 0, 0); }
-  to   { transform: translate3d(var(--amb), 0, 0); }
-}
-@keyframes amb-sway {
-  from { transform: translate3d(calc(var(--amb) * -1), 0, 0) rotate(-0.25deg); }
-  to   { transform: translate3d(var(--amb), 0, 0) rotate(0.25deg); }
-}
-@keyframes amb-breathe {
-  from { transform: scale(1); }
-  to   { transform: scale(calc(1 + var(--amb) / 100)); }
-}
-@keyframes amb-rise {
-  from { transform: translate3d(0, var(--amb), 0); }
-  to   { transform: translate3d(calc(var(--amb) * -1), calc(var(--amb) * -1), 0); }
-}
-@keyframes amb-shimmer {
-  from { opacity: 0.86; }
-  to   { opacity: 1; }
-}
-
-/* Handling the knife quiets the world: the brief's 20-35% of normal pace. */
-.hero-scene[data-engaged] .hero-layer { animation-duration: 46s !important; }
-
-/* Nothing moves when the page is hidden, and nothing moves for a visitor who
-   has asked for less motion. */
 @media (prefers-reduced-motion: reduce) {
-  .hero-layer,
-  .hero-fore { animation: none !important; }
+  .hero-key { transition: none; }
 }
 
 /* --- Layout -------------------------------------------------------------- */
@@ -1866,7 +1800,10 @@ body::after {
   .hero-grid {
     /* The side columns get real width so the neighbouring knives never sit
        underneath the copy or the price. */
-    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.3fr) minmax(0, 1.05fr);
+    /* A wider centre column: the flat, wide cutouts are height-limited by
+       their own aspect ratio, so the only way to make them read at hero
+       scale is to give the stage more width to fill. */
+    grid-template-columns: minmax(0, 1.06fr) minmax(0, 1.62fr) minmax(0, 1.06fr);
     gap: var(--space-lg);
     align-items: center;
   }
@@ -1939,6 +1876,10 @@ body::after {
   perspective: 1500px;
   touch-action: pan-y;
   cursor: grab;
+  /* Neighbours are cropped at the stage edge rather than allowed to run into
+     the copy columns. The brief permits a partially cropped preview; a
+     silhouette lying across the price is not negotiable. */
+  overflow: hidden;
 }
 .hero-stage:active { cursor: grabbing; }
 
@@ -2015,13 +1956,21 @@ body::after {
    Each cutout gives its viewer a different aspect-ratio box, so centring put
    a tall knife's base seventy pixels below a wide one's. Anchoring the box
    itself means every knife's feet land on the same line, whatever its shape. */
+/* The active knife is centred by the slide's own grid, not by a translate.
+   Framer animates `transform` on this element for the lift, which silently
+   overwrote `translateX(-50%)` and pushed every knife half its own width to
+   the right — 8.5vw off centre on every slide. */
+.hero-slide[data-role="active"] {
+  display: grid;
+  place-items: center;
+}
 .hero-slide[data-role="active"] .hero-handle {
-  position: absolute;
-  left: 50%;
-  bottom: 0;
-  transform: translateX(-50%);
+  position: relative;
   z-index: 5;
   pointer-events: auto;
+  width: 100%;
+  display: grid;
+  place-items: center;
 }
 
 /* The carousel's swipe surface: the whole stage, behind every knife. */
@@ -2119,36 +2068,60 @@ body::after {
 
 /* --- Controls ------------------------------------------------------------ */
 
+/* Three kinds of control, in three places.
+
+   They used to sit in one row under the middle of the stage: arrows, slide
+   count, a scroll cue and two viewer pills, overlapping each other over the
+   busiest part of the frame. Navigation now lives at the stage edges and the
+   count sits quietly below the product. */
 .hero-controls {
-  position: relative;
+  position: absolute;
+  inset: 0;
   z-index: 6;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-md);
-  padding: var(--space-sm) var(--gutter) calc(var(--space-md) + env(safe-area-inset-bottom));
+  pointer-events: none;
 }
 
 .hero-arrow {
-  width: 3.25rem;
-  height: 3.25rem;
-  backdrop-filter: blur(6px);
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3rem;
+  height: 3rem;
+  pointer-events: auto;
+  display: grid;
+  place-items: center;
+  border: var(--line);
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--toros-black) 58%, transparent);
+  backdrop-filter: blur(8px);
+  color: var(--toros-sand);
+  cursor: pointer;
+  transition: border-color var(--dur) var(--ease), color var(--dur) var(--ease),
+    background-color var(--dur) var(--ease);
 }
-.hero-arrow svg { width: 1.4rem; height: 1.4rem; }
+.hero-arrow:hover { border-color: var(--toros-brass); color: var(--toros-parchment); }
+.hero-arrow svg { width: 1.25rem; height: 1.25rem; }
+.hero-arrow--prev { left: clamp(0.75rem, 3vw, 2.5rem); }
+.hero-arrow--next { right: clamp(0.75rem, 3vw, 2.5rem); }
 
 .hero-index {
-  display: inline-flex;
+  position: absolute;
+  left: 50%;
+  bottom: clamp(0.75rem, 2.5vh, 1.75rem);
+  transform: translateX(-50%);
+  display: flex;
   align-items: center;
   gap: 0.6rem;
-  font-size: var(--text-sm);
+  margin: 0;
+  font-size: var(--text-label);
+  letter-spacing: 0.12em;
   color: var(--toros-steel);
-  font-variant-numeric: tabular-nums;
 }
-.hero-index-current { color: var(--toros-parchment); font-weight: 600; }
+.hero-index-current { color: var(--toros-parchment); }
 .hero-index-rule {
-  width: 2rem;
+  width: 2.25rem;
   height: 1px;
-  background: linear-gradient(90deg, var(--knife-accent), transparent);
+  background: color-mix(in srgb, var(--toros-border) 90%, transparent);
 }
 
 /* --- Small screens: everything inside the first screenful ---------------- */
@@ -2752,7 +2725,7 @@ body::after {
   gap: var(--space-md) var(--space-sm);
 }
 @media (min-width: 768px) { .catalog-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-lg) var(--space-md); } }
-@media (min-width: 1280px) { .catalog-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (min-width: 1400px) { .catalog-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 
 .catalog-empty { margin-top: var(--space-lg); color: var(--toros-steel); }
 
@@ -3414,16 +3387,6 @@ body::after {
    section its own ground and a rule to separate it from the rail above.
    Opaque, because like the rail it slides over the sticky hero. */
 
-.shopband {
-  position: relative;
-  z-index: 1;
-  background: var(--toros-black);
-  /* No top rule. The moving belt above is the divider between the hero and
-     the catalogue; a line here drew a second one a few pixels under it. And a
-     shorter lead-in, so the belt and the catalogue read as continuous rather
-     than separated by a band of black. */
-  padding-block: var(--space-lg) var(--space-2xl);
-}
 
 /* ==========================================================================
    Product viewer — one stage, whatever the product's assets support
@@ -3543,24 +3506,23 @@ body::after {
    plates were rendered against, and a centred image leaves a gap under it
    that reads as floating however good the shadow is. */
 .hero-viewer .pv-stage {
-  place-items: end center;
-  max-width: min(74vw, 32rem);
-  max-height: clamp(13rem, 36svh, 20rem);
+  /* No max-width cap. The silhouette's share of the stage is decided by the
+     per-slide `fill` in lib/hero-scenes.ts, which is the only place that
+     knows how much empty margin each cutout carries. */
+  place-items: center;
+  width: 100%;
+  max-width: 100%;
+  max-height: min(46svh, 26rem);
 }
 @media (min-width: 1024px) {
-  .hero-viewer .pv-stage { max-width: min(38vw, 28rem); max-height: clamp(18rem, 47svh, 29rem); }
+  .hero-viewer .pv-stage { max-height: min(52svh, 30rem); }
 }
 @media (max-width: 1023px) {
-  .hero-viewer .pv-stage { max-width: 62vw; max-height: clamp(9rem, 22svh, 13rem); }
+  .hero-viewer .pv-stage { max-height: min(34svh, 17rem); }
 }
-@media (max-width: 640px) {
-  .hero-viewer .pv-stage { max-width: 58vw; max-height: clamp(8rem, 20svh, 11.5rem); }
-}
-/* On the hero the controls would crowd the composition; the knife is the
-   affordance and the arrows below are the navigation. */
-@media (max-width: 1023px) {
-  .hero-viewer .pv-bar { display: none; }
-}
+/* On the hero the product is the affordance; zoom and reset belong to the
+   full inspect view, not stacked over the composition. */
+.hero-viewer .pv-bar { display: none; }
 
 .qi-viewer .pv-stage { max-height: min(56svh, 32rem); }
 @media (max-width: 899px) {
@@ -3568,10 +3530,27 @@ body::after {
 }
 
 .pdp-viewer .pv-stage {
-  max-height: min(64svh, 36rem);
+  /* A larger product stage, without letting it reach the purchase panel. */
+  max-height: min(70svh, 40rem);
   background: var(--toros-charcoal);
   padding: var(--space-md);
 }
+
+.hero-hint {
+  margin-top: 0.6rem;
+  padding: 0.3rem 0.85rem;
+  border: var(--line);
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--toros-black) 60%, transparent);
+  backdrop-filter: blur(6px);
+  font-size: var(--text-label);
+  letter-spacing: 0.06em;
+  color: var(--toros-sand);
+  opacity: 1;
+  transition: opacity 600ms var(--ease);
+}
+.hero-hint[data-used] { opacity: 0; }
+@media (prefers-reduced-motion: reduce) { .hero-hint { transition: none; } }
 
 /* The learn-once cue under the carousel. */
 .hero-cue {
@@ -3588,7 +3567,7 @@ body::after {
    Anatomy — the same photograph, opened
    ========================================================================== */
 
-.anat { margin-top: var(--space-xl); }
+.anat { margin-top: var(--space-lg); }
 
 .anat-head {
   display: flex;
@@ -3651,6 +3630,49 @@ body::after {
   border-radius: var(--radius-sm);
 }
 .anat-whole { display: grid; justify-items: start; }
+.anat-whole-stage { position: relative; display: inline-block; }
+
+/* Two hotspots on the real photograph. The blade end of these shots is to the
+   right and the handle to the left in every one of them. */
+.anat-spot {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--toros-parchment);
+  cursor: pointer;
+}
+.anat-spot--blade { right: 18%; top: 34%; }
+.anat-spot--handle { left: 16%; bottom: 30%; flex-direction: row-reverse; }
+.anat-spot-dot {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  border: 1px solid var(--toros-brass);
+  background: color-mix(in srgb, var(--toros-brass) 45%, transparent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--toros-brass) 16%, transparent);
+}
+.anat-spot-label {
+  padding: 0.2rem 0.6rem;
+  border: var(--line);
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--toros-black) 76%, transparent);
+  backdrop-filter: blur(6px);
+  font-size: var(--text-label);
+  letter-spacing: 0.06em;
+  opacity: 0;
+  transform: translateY(2px);
+  transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease);
+}
+.anat-whole[data-labelled] .anat-spot-label,
+.anat-spot:hover .anat-spot-label,
+.anat-spot:focus-visible .anat-spot-label { opacity: 1; transform: translateY(0); }
+@media (prefers-reduced-motion: reduce) {
+  .anat-spot-label { transition: none; }
+}
 .anat-note,
 .anat-caveat {
   margin-top: var(--space-sm);
@@ -3775,8 +3797,7 @@ body::after {
 
 /* The groups sit inline on a desktop and move into the sheet on a phone,
    where six of them across 360px is a row nobody can use. */
-.stoolbar-groups { display: none; }
-.stoolbar-sheet-open { display: inline-flex; align-items: center; }
+.stoolbar-sheet-open { display: inline-flex; align-items: center; gap: 0.4rem; }
 
 @media (min-width: 900px) {
   .stoolbar {
@@ -3786,14 +3807,31 @@ body::after {
     background: var(--toros-black);
     border-bottom: var(--line-faint);
   }
-  .stoolbar-groups {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-md);
-    padding-bottom: var(--space-sm);
-  }
-  .stoolbar-sheet-open { display: none; }
 }
+
+/* Active filters, as a short removable summary. Shown only when something is
+   actually selected. */
+.stoolbar-active {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  padding-bottom: var(--space-sm);
+}
+.stoolbar-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2rem;
+  padding-inline: 0.75rem;
+  border: var(--line);
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--toros-brass) 16%, transparent);
+  color: var(--toros-parchment);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+.stoolbar-chip:hover { border-color: var(--toros-brass); }
 
 .sfilter { display: grid; gap: 0.4rem; }
 .sfilter-label {
